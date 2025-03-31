@@ -1,0 +1,20 @@
+Calculus
+* MA-C1 Introduction to Differentiation (Year 11)
+* MA-C2: Differential Calculus (Year 12)
+* MA-C3 Applications of Differentiation (Year 12)
+* MA-C4 Integral Calculus (Year 12)
+Exponential and Logarithmic Functions
+* MA-E1: Logarithms and Exponentials (Year 11)
+Functions
+* MA-F1: Working with functions (Year 11)
+* MA-F2: Graphing Techniques (Year 12)
+Statistical Analysis
+* MA-S1 Probability and Discrete Probability Distributions (Year 11)
+* MA-S2 Descriptive Statistics and Bivariate Data Analysis (Year 12)
+* MA-S3 Random Variables (Year 12)
+Trigonometric Functions
+* MA-T1: Trigonometry and Measure of Angles (Year 11)
+* MA-T2: Trigonometric Functions and Identities (Year 11)
+* MA-T3: Trigonometric Functions and Graphs (Year 12)
+Financial mathematics
+* MA-M1: Modelling Financial Situations (Year 12)

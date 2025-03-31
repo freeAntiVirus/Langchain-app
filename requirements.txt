@@ -4,3 +4,8 @@ openai
 langchain-openai
 langchain-core
 langchain-community
+fastapi
+uvicorn
+Pillow  
+pydantic
+faiss-cpu 
