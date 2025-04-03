@@ -14,9 +14,11 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from openai import OpenAI
+from langchain.schema import Document
 
 load_dotenv()
 app = FastAPI()
+last_classified_images = []
 
 app.add_middleware(
     CORSMiddleware,
@@ -44,13 +46,28 @@ else:
 retriever = vectorstore.as_retriever()
 client = OpenAI()
 
+# Extract text from PDF pages
+def extract_text_from_pdf(file_path):
+    images = []
+    with pdfplumber.open(file_path) as pdf:
+        for i, page in enumerate(pdf.pages):
+            text = page.extract_text() or ""
+            images.append({
+                "id": f"page_{i+1}",
+                "text": text,
+                "topics": []
+            })
+    return images
+
 # Extract images from PDF pages
 def extract_images_from_pdf(file_path):
     images = []
     with pdfplumber.open(file_path) as pdf:
         for i, page in enumerate(pdf.pages):
+            text = page.extract_text() or ""
             img = page.to_image(resolution=200)
             pil_img = img.original
+            
 
             buffered = io.BytesIO()
             pil_img.save(buffered, format="PNG")
@@ -59,6 +76,7 @@ def extract_images_from_pdf(file_path):
             images.append({
                 "id": f"page_{i+1}",
                 "base64": img_str,
+                "text": text,
                 "topics": []
             })
     return images
@@ -85,7 +103,7 @@ Classify this exam question into one or more topic codes.
 - Do NOT say \"Financial Maths\" — use \"MA-M1: Modelling Financial Situations\"
 - Do NOT say \"Probability\" — use \"MA-S1: Probability and Discrete Probability Distributions\"
 
-You can use these previous corrections for reference:
+"Here are semantically similar questions and how they were classified. Use them to guide your classification."
 {corrections_context}
 
 📋 OFFICIAL TOPIC LIST:
@@ -116,22 +134,42 @@ Format:
         print("Failed to parse:", content)
         return {"topics": []}
 
+
 @app.post("/classify/")
 async def classify(file: UploadFile = File(...)):
+    global last_classified_images
     file_path = f"temp_{file.filename}"
     with open(file_path, "wb") as f:
         f.write(await file.read())
 
     try:
         images = extract_images_from_pdf(file_path)
-        retrieved_docs = retriever.get_relevant_documents("Classify HSC Maths questions")
-        past_corrections = "\n".join(doc.page_content for doc in retrieved_docs)
 
+        new_docs = []
         for img in images:
-            result = classify_image_with_gpt(img["base64"], topic_text, past_corrections)
-            print("✅ Classified:", result)
+            retrieved_docs = retriever.get_relevant_documents(img["text"])
+            corrections_context = "\n\n".join(
+    f"Question:\n{doc.page_content}\nTopics: {doc.metadata.get('topics', [])}"
+    for doc in retrieved_docs
+)
+
+            result = classify_image_with_gpt(img["base64"], topic_text, corrections_context)
             img["topics"] = result.get("topics", [])
 
+            doc = Document(
+                page_content=img["text"],
+                metadata={
+                    "question_id": img["id"],
+                    "topics": img["topics"],
+                    "base64": img["base64"]
+                }
+            )
+            new_docs.append(doc)
+
+        vectorstore.add_documents(new_docs)
+        vectorstore.save_local(VECTORSTORE_PATH)
+
+        last_classified_images = images
         return {"result": images}
     finally:
         os.remove(file_path)
@@ -140,14 +178,21 @@ class Correction(BaseModel):
     id: str
     corrected_topics: List[str]
 
+
 @app.post("/submit_corrections/")
 async def submit_corrections(corrections: List[Correction]):
-    new_docs = []
+    # Update existing documents by replacing only the "topic" metadata
+    updated_count = 0
     for correction in corrections:
-        content = f"{correction.id} → {', '.join(correction.corrected_topics)}"
-        new_docs.append(content)
+        for doc_id, doc in vectorstore.docstore._dict.items():
+            if doc.metadata.get("question_id") == correction.id:
+                doc.metadata["topics"] = correction.corrected_topics
+                updated_count += 1
 
-    docs = splitter.create_documents(new_docs)
-    vectorstore.add_documents(docs)
     vectorstore.save_local(VECTORSTORE_PATH)
-    return {"message": "Corrections saved."}
+
+    print("\n📚 Updated vector store contents:")
+    for i, doc in enumerate(vectorstore.docstore._dict.values()):
+        print(f"{i+1}. ID: {doc.metadata.get('question_id')} | Topics: {doc.metadata.get('topics')} | Content: {doc.page_content}")
+
+    return {"message": f"Corrections saved. Updated {updated_count} documents."}

@@ -46,19 +46,24 @@ function App() {
   };
 
   const submitCorrections = async () => {
-    const payload = Object.entries(correctedTopics).map(([id, topics]) => ({
-      id,
-      corrected_topics: topics,
-    }));
-
+    const payload = Object.entries(correctedTopics).map(([id, topics]) => {
+      const base64 = images.find((img) => img.id === id)?.base64 || "";
+      return {
+        id,
+        corrected_topics: topics,
+        base64: base64,  // Include image data
+      };
+    });
+  
     try {
-      await axios.post("http://localhost:8000/submit_correction/", payload);
+      await axios.post("http://localhost:8000/submit_corrections/", payload);
       alert("Corrections submitted!");
     } catch (err) {
       alert("Failed to submit corrections.");
       console.error(err);
     }
   };
+  
 
   console.log("Images:", images);
 
