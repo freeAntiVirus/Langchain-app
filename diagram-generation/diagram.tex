@@ -1,0 +1,51 @@
+\documentclass{article}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{amsmath}
+
+\begin{document}
+
+\section*{Cumulative Distribution Function $F(x)$}
+
+\[
+F(x) = 
+\begin{cases}
+0, & x < 0 \\
+x^3, & 0 \leq x \leq 1 \\
+1, & x > 1
+\end{cases}
+\]
+
+\begin{center}
+\begin{tikzpicture}
+  \begin{axis}[
+    axis lines = middle,
+    xlabel = {$x$},
+    ylabel = {$F(x)$},
+    ymin = -0.1, ymax = 1.2,
+    xmin = -0.5, xmax = 1.5,
+    xtick = {0, 1},
+    ytick = {0, 0.5, 1},
+    domain=-0.5:1.5,
+    samples=100,
+    width=12cm,
+    height=7cm,
+    smooth
+  ]
+    % Plot for x^3 from 0 to 1
+    \addplot[blue, thick, domain=0:1] {x^3};
+    
+    % Left flat part
+    \addplot[blue, thick, domain=-0.5:0] {0};
+
+    % Right flat part
+    \addplot[blue, thick, domain=1:1.5] {1};
+
+    % Dots at ends
+    \addplot[blue, only marks, mark=*, mark size=1pt] coordinates {(0,0)};
+    \addplot[blue, only marks, mark=*, mark size=1pt] coordinates {(1,1)};
+  \end{axis}
+\end{tikzpicture}
+\end{center}
+
+\end{document}

@@ -118,3 +118,9 @@ Upload a scanned or digital PDF of an HSC paper, review the AI-classified topics
 For help or ideas, feel free to reach out at [z5421904@ad.unsw.edu.au] or open an issue.
 
 ---
+
+### Diagram Generation 
+
+To generate diagram, paste tikz code into diagram.tex and run the following: 
+
+`pdflatex diagram.tex`
