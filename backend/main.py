@@ -15,6 +15,10 @@ from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from openai import OpenAI
 from langchain.schema import Document
+import pytesseract
+from pydantic import BaseModel
+from typing import List, Optional
+
 
 load_dotenv()
 app = FastAPI()
@@ -59,14 +63,19 @@ def extract_text_from_pdf(file_path):
             })
     return images
 
-# Extract images from PDF pages
+
+def extract_text_with_ocr(pil_image):
+    return pytesseract.image_to_string(pil_image)
+
+#Extract images from PDF pages
 def extract_images_from_pdf(file_path):
     images = []
     with pdfplumber.open(file_path) as pdf:
         for i, page in enumerate(pdf.pages):
-            text = page.extract_text() or ""
             img = page.to_image(resolution=200)
             pil_img = img.original
+            text = extract_text_with_ocr(pil_img)
+            print("Extracted text:", text)
             
 
             buffered = io.BytesIO()
@@ -80,6 +89,7 @@ def extract_images_from_pdf(file_path):
                 "topics": []
             })
     return images
+
 
 # Classify an image using GPT-4o Vision
 def classify_image_with_gpt(base64_img: str, topics_text: str, corrections_context: str):
@@ -196,3 +206,58 @@ async def submit_corrections(corrections: List[Correction]):
         print(f"{i+1}. ID: {doc.metadata.get('question_id')} | Topics: {doc.metadata.get('topics')} | Content: {doc.page_content}")
 
     return {"message": f"Corrections saved. Updated {updated_count} documents."}
+
+class ImageData(BaseModel):
+    base64: str
+    id: str
+    text: Optional[str]
+    topics: Optional[List[str]]
+
+class RevampRequest(BaseModel):
+    img: ImageData
+
+@app.post("/revamp_question/")
+async def revamp_question(req: RevampRequest):
+    img = req.img
+    print("Received image:", img.text, img.topics)
+
+    if not img.text or not img.topics:
+        return {"error": "Original text or topics not found."}
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a creative HSC Mathematics teacher who generates high-quality exam-style questions in LaTeX format."},
+            {
+                "role": "user",
+               "content": f"""
+The original question was:
+\"{img.text}\"
+
+It was classified under the following topics:
+{', '.join(img.topics)}
+
+Generate a **similar but different** HSC-style question that:
+- Targets the **same topics**
+- Has **clear, unambiguous wording**
+- Uses **LaTeX math format** *only* for equations (like \( y = 2x + 3 \) or \[ f(x) = x^2 - 4 \])
+- Returns the question as **plain text** with math equations inside LaTeX math delimiters (\\( ... \\) or \\[ ... \\])
+- Do **NOT** use environments like `enumerate`, `itemize`, `document`, or `TikZ`
+- Use double backslashes `\\\\` to indicate new lines
+- **Only return the question text**, do **NOT** include any explanation
+
+Example output:
+Let \\( f(x) = x^2 - 3x \\). Find the value of \\( f(2) \\).
+"""
+            }
+        ],
+        temperature=0.7
+    )
+
+    new_question_latex = response.choices[0].message.content.strip()
+
+    return {
+        "original_text": img.text,
+        "topics": img.topics,
+        "revamped_question_latex": new_question_latex
+    }
