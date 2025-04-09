@@ -10,13 +10,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from typing import List
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from openai import OpenAI
-from langchain.schema import Document
+from langchain.schema import Document, HumanMessage
 import pytesseract
 from pydantic import BaseModel
+import ast
 from typing import List, Optional
 
 
@@ -68,28 +69,115 @@ def extract_text_with_ocr(pil_image):
     return pytesseract.image_to_string(pil_image)
 
 #Extract images from PDF pages
-def extract_images_from_pdf(file_path):
+# def extract_images_from_pdf(file_path):
+#     images = []
+#     with pdfplumber.open(file_path) as pdf:
+#         for i, page in enumerate(pdf.pages):
+#             img = page.to_image(resolution=200)
+#             pil_img = img.original
+#             text = extract_text_with_ocr(pil_img)
+#             print("Extracted text:", text)
+            
+
+#             buffered = io.BytesIO()
+#             pil_img.save(buffered, format="PNG")
+#             img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+#             images.append({
+#                 "id": f"page_{i+1}",
+#                 "base64": img_str,
+#                 "text": text,
+#                 "topics": []
+#             })
+#     return images
+
+
+def extract_lines_with_coordinates(pil_img):
+    ocr_data = pytesseract.image_to_data(pil_img, output_type=pytesseract.Output.DICT)
+    lines = []
+    current_line = ""
+    last_top = None
+
+    for i, word in enumerate(ocr_data['text']):
+        if word.strip():
+            top = ocr_data['top'][i]
+            if last_top is not None and abs(top - last_top) > 10:
+                lines.append((last_top, current_line.strip()))
+                current_line = word
+            else:
+                current_line += ' ' + word
+            last_top = top
+    if current_line:
+        lines.append((last_top, current_line.strip()))
+    return lines
+
+def extract_question_coordinates_from_lines(lines, openai_api_key):
+    chat = ChatOpenAI(model_name="gpt-4", temperature=0, openai_api_key=openai_api_key)
+    prompt = (
+        "You are given a list of lines with their Y-coordinates from the top of a page. "
+        "Identify which lines mark the start of **new questions** (e.g., '1', '2', '3', etc.).\n"
+        "Do not split sub-parts (like a, b, c) into separate questions — treat them as part of the same question.\n"
+        "Return only a **valid Python list of tuples** in this format: [(question_number, y_coordinate)].\n"
+        "No context, no explanation, just the list.\n\n"
+        f"{lines}"
+    )
+
+    response = chat([HumanMessage(content=prompt)])
+    print("GPT Response:", response.content)
+    
+    try:
+        # This safely converts a string like '[("1", 536), ("2", 1488)]' into real tuples
+        result = ast.literal_eval(response.content)
+        if isinstance(result, list) and all(isinstance(item, tuple) and len(item) == 2 for item in result):
+            return result
+        else:
+            print("Parsed result not valid:", result)
+            return []
+    except Exception as e:
+        print("Failed to parse GPT output as list of tuples:", e)
+        return []
+
+
+def crop_image_by_y_coords(img, y_start, y_end):
+    return img.crop((0, y_start, img.width, y_end))
+
+def extract_images_from_pdf(file_path, openai_api_key):
     images = []
     with pdfplumber.open(file_path) as pdf:
         for i, page in enumerate(pdf.pages):
-            img = page.to_image(resolution=200)
-            pil_img = img.original
-            text = extract_text_with_ocr(pil_img)
-            print("Extracted text:", text)
+            img = page.to_image(resolution=200).original
             
+            lines = extract_lines_with_coordinates(img)
+            question_coords = extract_question_coordinates_from_lines(lines, openai_api_key)
 
-            buffered = io.BytesIO()
-            pil_img.save(buffered, format="PNG")
-            img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+            print("Raw question_coords:", question_coords)
 
-            images.append({
-                "id": f"page_{i+1}",
-                "base64": img_str,
-                "text": text,
-                "topics": []
-            })
+            cropped_questions = []
+            for idx, (q_num, y_start) in enumerate(question_coords):
+                print("QUESTION",idx, q_num, y_start)
+                if idx + 1 < len(question_coords):
+                    y_end = question_coords[idx + 1][1]
+                else:
+                    y_end = img.height
+
+                leeway = 10
+                y_start_leeway = max(y_start - leeway, 0)
+                y_end_leeway = min(y_end + leeway, img.height)
+
+                cropped_img = crop_image_by_y_coords(img, y_start_leeway, y_end_leeway)
+                text = extract_text_with_ocr(cropped_img)
+                buffered = io.BytesIO()
+                cropped_img.save(buffered, format="PNG")
+                img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+                cropped_questions.append({
+                    "id": f"page_{i+1}_question_{q_num}",
+                    "base64": img_str,
+                    "text": text,
+                    "topics": []
+                })
+
+            images.extend(cropped_questions)
     return images
-
 
 # Classify an image using GPT-4o Vision
 def classify_image_with_gpt(base64_img: str, topics_text: str, corrections_context: str):
@@ -153,7 +241,7 @@ async def classify(file: UploadFile = File(...)):
         f.write(await file.read())
 
     try:
-        images = extract_images_from_pdf(file_path)
+        images = extract_images_from_pdf(file_path, os.getenv("OPENAI_API_KEY"))
 
         new_docs = []
         for img in images:
