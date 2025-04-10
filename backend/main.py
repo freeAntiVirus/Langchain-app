@@ -96,81 +96,107 @@ def extract_lines_with_coordinates(pil_img):
     ocr_data = pytesseract.image_to_data(pil_img, output_type=pytesseract.Output.DICT)
     lines = []
     current_line = ""
-    last_top = None
+    last_line_num = -1
+    last_block_num = -1
+    last_top = -1
 
-    for i, word in enumerate(ocr_data['text']):
-        if word.strip():
-            top = ocr_data['top'][i]
-            if last_top is not None and abs(top - last_top) > 10:
+    for i in range(len(ocr_data['text'])):
+        word = ocr_data['text'][i]
+        if not word.strip():
+            continue
+
+        line_num = ocr_data['line_num'][i]
+        block_num = ocr_data['block_num'][i]
+        top = ocr_data['top'][i]
+
+        if line_num != last_line_num or block_num != last_block_num:
+            if current_line:
                 lines.append((last_top, current_line.strip()))
-                current_line = word
-            else:
-                current_line += ' ' + word
+            current_line = word
             last_top = top
+        else:
+            current_line += " " + word
+
+        last_line_num = line_num
+        last_block_num = block_num
+
     if current_line:
         lines.append((last_top, current_line.strip()))
+
     return lines
+
 
 def extract_question_coordinates_from_lines(lines, openai_api_key):
     chat = ChatOpenAI(model_name="gpt-4", temperature=0, openai_api_key=openai_api_key)
     prompt = (
-        "You are given a list of lines with their Y-coordinates from the top of a page. "
-        "Identify which lines mark the start of **new questions** (e.g., '1', '2', '3', etc.).\n"
-        "Do not split sub-parts (like a, b, c) into separate questions — treat them as part of the same question.\n"
-        "Return only a **valid Python list of tuples** in this format: [(question_number, y_coordinate)].\n"
-        "No context, no explanation, just the list.\n\n"
-        f"{lines}"
+        "You are given a list of lines with their Y-coordinates from the top of a page.\n"
+        "Identify the lines that mark the start of **new questions**.\n\n"
+
+        "### Instructions:\n"
+        "- If a line starts with a question number (e.g. 'Question 12 (3 marks)') or just a number like '12', and it is followed by lines continuing the prompt, only mark the first line. Do NOT mark those continuation lines as new questions — they are part of the same question block.\n"
+        "- A question only ends when a new question starts \n"
+        "- If a line contains only a question number (like '4' or 'Question 4') and is immediately followed by another line of text, treat both as the same question. Only mark the number line as the start.\n"
+        "- Do NOT mark answer options like 'A.', 'B.', 'C.', or 'D.' as new questions.\n"
+        "- Do NOT treat sub-parts like (a), (b), (c) as separate questions — they are part of the main question.\n"
+        "- Use your reasoning: a question ends only after its options (if present) are listed, or when a completely new topic/question begins.\n\n"
+
+        "Return a valid Python list of integers representing the **Y-coordinates** where new questions begin.\n"
+        "Do not include any explanation. Do not include any question text.\n"
+        "Example output: [100, 400, 700]\n\n"
+
+        f"lines = {lines}"
     )
 
     response = chat([HumanMessage(content=prompt)])
     print("GPT Response:", response.content)
-    
+
     try:
-        # This safely converts a string like '[("1", 536), ("2", 1488)]' into real tuples
         result = ast.literal_eval(response.content)
-        if isinstance(result, list) and all(isinstance(item, tuple) and len(item) == 2 for item in result):
+        if isinstance(result, list) and all(isinstance(y, int) for y in result):
             return result
         else:
             print("Parsed result not valid:", result)
             return []
     except Exception as e:
-        print("Failed to parse GPT output as list of tuples:", e)
+        print("Failed to parse GPT output as list of Y-coordinates:", e)
         return []
-
 
 def crop_image_by_y_coords(img, y_start, y_end):
     return img.crop((0, y_start, img.width, y_end))
+
+def extract_text_with_ocr(pil_img):
+    return pytesseract.image_to_string(pil_img)
 
 def extract_images_from_pdf(file_path, openai_api_key):
     images = []
     with pdfplumber.open(file_path) as pdf:
         for i, page in enumerate(pdf.pages):
             img = page.to_image(resolution=200).original
-            
-            lines = extract_lines_with_coordinates(img)
-            question_coords = extract_question_coordinates_from_lines(lines, openai_api_key)
 
-            print("Raw question_coords:", question_coords)
+            lines = extract_lines_with_coordinates(img)
+            print("Raw lines:", lines)
+            y_coords = extract_question_coordinates_from_lines(lines, openai_api_key)
+            print("Raw Y-coordinates:", y_coords)
 
             cropped_questions = []
-            for idx, (q_num, y_start) in enumerate(question_coords):
-                print("QUESTION",idx, q_num, y_start)
-                if idx + 1 < len(question_coords):
-                    y_end = question_coords[idx + 1][1]
+            for idx, y_start in enumerate(y_coords):
+                if idx + 1 < len(y_coords):
+                    y_end = y_coords[idx + 1]
                 else:
                     y_end = img.height
 
-                leeway = 10
+                leeway = 20
                 y_start_leeway = max(y_start - leeway, 0)
-                y_end_leeway = min(y_end + leeway, img.height)
+                y_end_leeway = min(y_end, img.height)
 
                 cropped_img = crop_image_by_y_coords(img, y_start_leeway, y_end_leeway)
                 text = extract_text_with_ocr(cropped_img)
                 buffered = io.BytesIO()
                 cropped_img.save(buffered, format="PNG")
                 img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
                 cropped_questions.append({
-                    "id": f"page_{i+1}_question_{q_num}",
+                    "id": f"page_{i+1}_question_{idx+1}",
                     "base64": img_str,
                     "text": text,
                     "topics": []
@@ -178,6 +204,7 @@ def extract_images_from_pdf(file_path, openai_api_key):
 
             images.extend(cropped_questions)
     return images
+
 
 # Classify an image using GPT-4o Vision
 def classify_image_with_gpt(base64_img: str, topics_text: str, corrections_context: str):
@@ -328,14 +355,9 @@ It was classified under the following topics:
 Generate a **similar but different** HSC-style question that:
 - Targets the **same topics**
 - Has **clear, unambiguous wording**
-- Uses **LaTeX math format** *only* for equations (like \( y = 2x + 3 \) or \[ f(x) = x^2 - 4 \])
-- Returns the question as **plain text** with math equations inside LaTeX math delimiters (\\( ... \\) or \\[ ... \\])
-- Do **NOT** use environments like `enumerate`, `itemize`, `document`, or `TikZ`
-- Use double backslashes `\\\\` to indicate new lines
+- Uses **LaTeX math format** 
 - **Only return the question text**, do **NOT** include any explanation
 
-Example output:
-Let \\( f(x) = x^2 - 3x \\). Find the value of \\( f(2) \\).
 """
             }
         ],

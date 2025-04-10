@@ -20,6 +20,17 @@ const topicList = [
   "MA-M1: Modelling Financial Situations",
 ];
 
+function convertToAlignedLatex(raw) {
+  const lines = raw
+    .split(/\\+/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => `&\\text{${line}} \\\\`);
+  
+  return `\\[\n\\begin{aligned}\n${lines.join('\n')}\n\\end{aligned}\n\\]`;
+}
+
+
 const RevampPopup = ({ questionLatex, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
@@ -32,7 +43,8 @@ const RevampPopup = ({ questionLatex, onClose }) => {
         </button>
         <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">🔁 Revamped Question</h2>
         <div className="text-gray-700 dark:text-gray-300 overflow-y-auto max-h-[60vh] px-1">
-          <MathJax dynamic>{questionLatex}</MathJax>
+          <MathJax dynamic>{convertToAlignedLatex(questionLatex)}</MathJax>
+
         </div>
         <div className="mt-6 flex justify-end gap-2">
           <button
@@ -46,9 +58,6 @@ const RevampPopup = ({ questionLatex, onClose }) => {
     </div>
   );
 };
-
-
-
 
 function App() {
   const [file, setFile] = useState(null);
@@ -96,6 +105,7 @@ function App() {
       console.error(err);
     }
   };
+
 
   const fetchRevamp = async (img) => {
     try {
