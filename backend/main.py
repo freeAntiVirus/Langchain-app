@@ -272,11 +272,32 @@ async def classify(file: UploadFile = File(...)):
 
         new_docs = []
         for img in images:
+
+            # Check if this exact question already exists 
+            # (CAN REMOVE THIS CHECK WHEN TESTING)
+            duplicate_found = False
+            for doc in vectorstore.docstore._dict.values():
+                if doc.page_content.strip() == img["text"].strip():
+                    print(f"Skipping GPT — Exact duplicate found for {img['id']}")
+                    img["topics"] = doc.metadata.get("topics", [])
+                    duplicate_found = True
+                    break
+
+            if duplicate_found:
+                continue  #  Skip GPT and go to next image
+
             retrieved_docs = retriever.get_relevant_documents(img["text"])
+
+            # Printing out the questions ai found semantically similar
+            print("\n🔎 Retrieved relevant documents for this question:")
+            for i, doc in enumerate(retrieved_docs):
+                print(f"\nDoc {i+1}:")
+                print(f"Text:\n{doc.page_content}")
+
             corrections_context = "\n\n".join(
-    f"Question:\n{doc.page_content}\nTopics: {doc.metadata.get('topics', [])}"
-    for doc in retrieved_docs
-)
+                f"Question:\n{doc.page_content}\nTopics: {doc.metadata.get('topics', [])}"
+                for doc in retrieved_docs
+            )
 
             result = classify_image_with_gpt(img["base64"], topic_text, corrections_context)
             img["topics"] = result.get("topics", [])
@@ -291,8 +312,11 @@ async def classify(file: UploadFile = File(...)):
             )
             new_docs.append(doc)
 
-        vectorstore.add_documents(new_docs)
-        vectorstore.save_local(VECTORSTORE_PATH)
+        if new_docs:
+            vectorstore.add_documents(new_docs)
+            vectorstore.save_local(VECTORSTORE_PATH)
+        else:
+            print("No new documents to add to vectorstore.")
 
         last_classified_images = images
         return {"result": images}
