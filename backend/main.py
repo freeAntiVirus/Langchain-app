@@ -44,8 +44,20 @@ splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
 if os.path.exists(VECTORSTORE_PATH):
     vectorstore = FAISS.load_local(VECTORSTORE_PATH, OpenAIEmbeddings(), allow_dangerous_deserialization=True)
 else:
-    topic_docs = splitter.create_documents([topic_text])
-    vectorstore = FAISS.from_documents(topic_docs, OpenAIEmbeddings())
+    # topic_docs = splitter.create_documents([topic_text])
+    # vectorstore = FAISS.from_documents(topic_docs, OpenAIEmbeddings())
+    # vectorstore.save_local(VECTORSTORE_PATH)
+    # vectorstore = FAISS.new(OpenAIEmbeddings())
+    # vectorstore.save_local(VECTORSTORE_PATH)
+
+    # Create with one dummy document
+    dummy_doc = Document(page_content="placeholder", metadata={})
+    vectorstore = FAISS.from_documents([dummy_doc], OpenAIEmbeddings())
+
+    # Immediately clear it
+    vectorstore.docstore._dict.clear()
+    vectorstore.index.reset()
+
     vectorstore.save_local(VECTORSTORE_PATH)
 
 retriever = vectorstore.as_retriever()
@@ -174,6 +186,7 @@ def extract_images_from_pdf(file_path, openai_api_key):
             img = page.to_image(resolution=200).original
 
             lines = extract_lines_with_coordinates(img)
+
             print("Raw lines:", lines)
             y_coords = extract_question_coordinates_from_lines(lines, openai_api_key)
             print("Raw Y-coordinates:", y_coords)
@@ -272,11 +285,32 @@ async def classify(file: UploadFile = File(...)):
 
         new_docs = []
         for img in images:
+
+            # Check if this exact question already exists 
+            # (CAN REMOVE THIS CHECK WHEN TESTING)
+            duplicate_found = False
+            for doc in vectorstore.docstore._dict.values():
+                if doc.page_content.strip() == img["text"].strip():
+                    print(f"Skipping GPT — Exact duplicate found for {img['id']}")
+                    img["topics"] = doc.metadata.get("topics", [])
+                    duplicate_found = True
+                    break
+
+            if duplicate_found:
+                continue  #  Skip GPT and go to next image
+
             retrieved_docs = retriever.get_relevant_documents(img["text"])
+
+            # Printing out the questions ai found semantically similar
+            print("\n🔎 Retrieved relevant documents for this question:")
+            for i, doc in enumerate(retrieved_docs):
+                print(f"\nDoc {i+1}:")
+                print(f"Text:\n{doc.page_content}")
+
             corrections_context = "\n\n".join(
-    f"Question:\n{doc.page_content}\nTopics: {doc.metadata.get('topics', [])}"
-    for doc in retrieved_docs
-)
+                f"Question:\n{doc.page_content}\nTopics: {doc.metadata.get('topics', [])}"
+                for doc in retrieved_docs
+            )
 
             result = classify_image_with_gpt(img["base64"], topic_text, corrections_context)
             img["topics"] = result.get("topics", [])
@@ -291,8 +325,11 @@ async def classify(file: UploadFile = File(...)):
             )
             new_docs.append(doc)
 
-        vectorstore.add_documents(new_docs)
-        vectorstore.save_local(VECTORSTORE_PATH)
+        if new_docs:
+            vectorstore.add_documents(new_docs)
+            vectorstore.save_local(VECTORSTORE_PATH)
+        else:
+            print("No new documents to add to vectorstore.")
 
         last_classified_images = images
         return {"result": images}
