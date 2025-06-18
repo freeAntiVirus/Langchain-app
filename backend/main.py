@@ -44,8 +44,20 @@ splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
 if os.path.exists(VECTORSTORE_PATH):
     vectorstore = FAISS.load_local(VECTORSTORE_PATH, OpenAIEmbeddings(), allow_dangerous_deserialization=True)
 else:
-    topic_docs = splitter.create_documents([topic_text])
-    vectorstore = FAISS.from_documents(topic_docs, OpenAIEmbeddings())
+    # topic_docs = splitter.create_documents([topic_text])
+    # vectorstore = FAISS.from_documents(topic_docs, OpenAIEmbeddings())
+    # vectorstore.save_local(VECTORSTORE_PATH)
+    # vectorstore = FAISS.new(OpenAIEmbeddings())
+    # vectorstore.save_local(VECTORSTORE_PATH)
+
+    # Create with one dummy document
+    dummy_doc = Document(page_content="placeholder", metadata={})
+    vectorstore = FAISS.from_documents([dummy_doc], OpenAIEmbeddings())
+
+    # Immediately clear it
+    vectorstore.docstore._dict.clear()
+    vectorstore.index.reset()
+
     vectorstore.save_local(VECTORSTORE_PATH)
 
 retriever = vectorstore.as_retriever()
@@ -174,6 +186,7 @@ def extract_images_from_pdf(file_path, openai_api_key):
             img = page.to_image(resolution=200).original
 
             lines = extract_lines_with_coordinates(img)
+
             print("Raw lines:", lines)
             y_coords = extract_question_coordinates_from_lines(lines, openai_api_key)
             print("Raw Y-coordinates:", y_coords)
