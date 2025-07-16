@@ -2,6 +2,12 @@ import React, { useState } from "react";
 import axios from "axios";
 import "./App.css";
 import { MathJaxContext, MathJax } from "better-react-mathjax";
+import NavBar from "./components/NavBar"; // Adjust path if NavBar is in a different folder
+import Home from "./pages/Home"; // These pages must exist
+import ClassifyResources from "./pages/ClassifyResources"; // Adjust path if needed
+import CreatePracticeSet from "./pages/CreatePracticeSet"; // Adjust path if needed
+import { Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router } from 'react-router-dom';
 
 const topicList = [
   "MA-C1: Introduction to Differentiation",
@@ -82,113 +88,18 @@ function App() {
     }
   };
 
-  const handleTopicChange = (imageId, selectedOptions) => {
-    const selectedValues = Array.from(selectedOptions, (opt) => opt.value);
-    setCorrectedTopics((prev) => ({ ...prev, [imageId]: selectedValues }));
-  };
-
-  const submitCorrections = async () => {
-    const payload = Object.entries(correctedTopics).map(([id, topics]) => {
-      const base64 = images.find((img) => img.id === id)?.base64 || "";
-      return {
-        id,
-        corrected_topics: topics,
-        base64: base64,
-      };
-    });
-
-    try {
-      await axios.post("http://localhost:8000/submit_corrections/", payload);
-      alert("Corrections submitted!");
-    } catch (err) {
-      alert("Failed to submit corrections.");
-      console.error(err);
-    }
-  };
-
-
-  const fetchRevamp = async (img) => {
-    try {
-      const res = await axios.post("http://localhost:8000/revamp_question/", { img });
-      console.log("🔄 Response from /revamp_question/:", res.data);
-      setRevampQuestion(res.data.revamped_question_latex);
-      setShowPopup(true);
-    } catch (err) {
-      alert("Failed to generate similar question.");
-      console.error(err);
-    }
-  };
-  
-
   return (
-    <MathJaxContext>
-      <div className="App p-6">
-        <h1 className="text-2xl font-bold mb-4">📄 HSC Maths Image Classifier</h1>
-  
-        <input type="file" accept=".pdf" onChange={(e) => setFile(e.target.files[0])} />
-  
-        <button
-          onClick={uploadFile}
-          disabled={!file}
-          className="mt-2 mb-6 bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
-        >
-          Upload & Classify
-        </button>
-  
-        {images.length > 0 && (
-          <div className="space-y-8">
-            {images.map((img) => (
-              <div key={img.id} className="relative border p-4 rounded shadow">
-                <button
-                  onClick={() => fetchRevamp(img)}
-                  className="absolute top-2 right-2 bg-yellow-300 px-2 py-1 rounded hover:bg-yellow-400"
-                >
-                  Revamp 🔁
-                </button>
-                <img
-                  src={`data:image/png;base64,${img.base64}`}
-                  alt={`question-${img.id}`}
-                  className="w-full border mb-4"
-                />
-                <div className="mt-2">
-                  <p>
-                    <strong>GPT Prediction:</strong>{" "}
-                    {img.topics?.join(", ") || "No prediction"}
-                  </p>
-                  <label className="block mt-2">Correct topics:</label>
-                  <select
-                    multiple
-                    value={correctedTopics[img.id] || []}
-                    onChange={(e) => handleTopicChange(img.id, e.target.selectedOptions)}
-                    className="w-full border rounded mt-1 p-1"
-                  >
-                    {topicList.map((topic) => (
-                      <option key={topic} value={topic}>
-                        {topic}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            ))}
-  
-            <button
-              onClick={submitCorrections}
-              className="bg-green-600 text-white px-4 py-2 rounded mt-6"
-            >
-              Submit All Corrections
-            </button>
-          </div>
-        )}
-  
-        {showPopup && (
-          <RevampPopup
-            questionLatex={revampQuestion}
-            onClose={() => setShowPopup(false)}
-          />
-        )}
+    <Router>
+      <NavBar />
+      <div className="p-6">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/classifyResources" element={<ClassifyResources />} />
+          <Route path="/practice" element={<CreatePracticeSet />} />
+          {/* Add more routes as needed */}
+        </Routes>
       </div>
-    </MathJaxContext>
+    </Router>
   );
   
 }
