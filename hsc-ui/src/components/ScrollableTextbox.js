@@ -1,16 +1,9 @@
+
+
+
 import React, { useState } from "react";
 import axios from "axios";
 import { MathJax, MathJaxContext } from "better-react-mathjax";
-
-// Utility for aligned LaTeX formatting
-function convertToAlignedLatex(raw) {
-  const lines = raw
-    .split(/\\+/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => `&\\text{${line}} \\\\`);
-  return `\\[\n\\begin{aligned}\n${lines.join("\n")}\n\\end{aligned}\n\\]`;
-}
 
 // Revamp question popup
 const RevampPopup = ({ questionLatex, onClose }) => {
@@ -25,7 +18,7 @@ const RevampPopup = ({ questionLatex, onClose }) => {
         </button>
         <h2 className="text-xl font-semibold mb-4 text-gray-800">🔁 Revamped Question</h2>
         <div className="text-gray-700 overflow-y-auto max-h-[60vh] px-1">
-          <MathJax dynamic>{convertToAlignedLatex(questionLatex)}</MathJax>
+          <MathJax dynamic>{questionLatex}</MathJax>
         </div>
         <div className="mt-6 flex justify-end">
           <button
@@ -45,7 +38,6 @@ const ScrollableTextBox = ({ questions = [] }) => {
   const [showPopup, setShowPopup] = useState(false);
   const [loadingIndex, setLoadingIndex] = useState(null);
 
-  // ✅ Send the full question object (not just base64!)
   const fetchRevamp = async (question, index) => {
     try {
       setLoadingIndex(index);
@@ -54,8 +46,8 @@ const ScrollableTextBox = ({ questions = [] }) => {
           id: question.id || question.QuestionId,
           base64: question.base64,
           text: question.text,
-          topics: question.topics
-        }
+          topics: question.topics,
+        },
       });
       setRevampQuestion(res.data.revamped_question_latex);
       setShowPopup(true);
@@ -91,7 +83,7 @@ const ScrollableTextBox = ({ questions = [] }) => {
               </div>
 
               <button
-                onClick={() => fetchRevamp(q, index)} // ✅ send full question
+                onClick={() => fetchRevamp(q, index)}
                 className="absolute top-2 right-2 bg-yellow-300 px-2 py-1 rounded text-sm hover:bg-yellow-400"
                 disabled={loadingIndex === index}
               >

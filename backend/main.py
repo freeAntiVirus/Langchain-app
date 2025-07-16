@@ -475,29 +475,38 @@ async def revamp_question(req: RevampRequest):
     print("Received image:", img.text, img.topics)
 
     if not img.text or not img.topics:
-        return {"error": "Original text or topics not found."}
+        return JSONResponse(
+            content={"error": "Original text or topics not found."},
+            status_code=400
+        )
 
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a creative HSC Mathematics teacher who generates high-quality exam-style questions in LaTeX format."},
-            {
-                "role": "user",
-               "content": f"""
+    prompt = f"""
 The original question was:
 \"{img.text}\"
 
 It was classified under the following topics:
 {', '.join(img.topics)}
 
-Generate a **similar but different** HSC-style question that:
-- Targets the **same topics**
-- Has **clear, unambiguous wording**
-- Uses **LaTeX math format** 
-- **Only return the question text**, do **NOT** include any explanation
+✅ Generate a **similar but different** HSC-style math question in proper **LaTeX format**.
 
+Instructions:
+- Target the **same topics**
+- Do **NOT** include "Question X", "3 marks", "Office Use Only", or ID numbers
+- Mimic the **structure and spacing** of the original question — if the original had parts on separate lines, maintain similar line separation
+- If the question has parts (e.g. (a), (b)), split each part on a **new line**
+- **Ignore any diagrams or image references** — do not include them
+- DO NOT use `\\begin{{enumerate}}`, `\\item`, `\\begin{{tabular}}`, `\\begin{{center}}`, or any LaTeX commands unsupported by MathJax
+- Use **\\( ... \\)** for inline math
+- Use **\\[ ... \\]** or `\\begin{{align*}} ... \\end{{align*}}` for display math
+- Only return the **question** – no explanations or commentary
+- Output must be clean LaTeX, ready to render with MathJax
 """
-            }
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a creative HSC Mathematics teacher who writes high-quality math questions in LaTeX."},
+            {"role": "user", "content": prompt}
         ],
         temperature=0.7
     )
@@ -509,6 +518,8 @@ Generate a **similar but different** HSC-style question that:
         "topics": img.topics,
         "revamped_question_latex": new_question_latex
     }
+
+
 
 class QuestionRequest(BaseModel):
     topics: List[str]
