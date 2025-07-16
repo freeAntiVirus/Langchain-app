@@ -88,20 +88,18 @@ function ClassifyResources() {
   };
 
   const submitCorrections = async () => {
-    const payload = Object.entries(correctedTopics).map(([id, topics]) => {
-      const base64 = images.find((img) => img.id === id)?.base64 || "";
-      return {
-        id,
-        corrected_topics: topics,
-        base64: base64,
-      };
-    });
-
-
+    const payload = images.map((img) => ({
+      id: img.id,
+      text: img.text,
+      base64: img.base64,
+      topics: correctedTopics[img.id]?.length ? correctedTopics[img.id] : img.topics || [],
+    }));
+    
+  
     try {
       await axios.post("http://localhost:8000/submit_corrections/", payload);
       alert("Corrections submitted!");
-
+  
       setCorrectedTopics({});
       setImages([]);
     } catch (err) {
@@ -109,6 +107,7 @@ function ClassifyResources() {
       console.error(err);
     }
   };
+  
 
 
   const fetchRevamp = async (img) => {

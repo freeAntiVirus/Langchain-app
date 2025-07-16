@@ -43,8 +43,8 @@ def print_faiss_vectorstore(index_path=VECTORSTORE_PATH):
 
     embeddings = OpenAIEmbeddings()
     db = FAISS.load_local(index_path, embeddings, allow_dangerous_deserialization=True)
-    for i, doc in enumerate(db.docstore._dict.values()):
-        print(f"Document {i+1}:")
+    for i, (doc_id, doc) in enumerate(db.docstore._dict.items()):
+        print(f"Document {i+1} - ID: {doc_id}")
         print(doc.page_content)
         print("-" * 40)
 

@@ -17,8 +17,11 @@ from openai import OpenAI
 from langchain.schema import Document, HumanMessage
 import pytesseract
 from pydantic import BaseModel
+from fastapi.responses import JSONResponse
 import ast
 from typing import List, Optional
+from pymongo import MongoClient
+import random
 
 
 load_dotenv()
@@ -33,6 +36,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Get MongoDB URI from .env
+MONGO_URI = os.getenv("MONGO_URI")  # Format: mongodb+srv://user:pass@cluster0.mongodb.net/?retryWrites=true&w=majority
+
+# Connect to MongoDB
+client = MongoClient(MONGO_URI)
+db = client["test_db"]
+
 # Load topic list
 with open("topics.txt", "r") as f:
     topic_text = f.read()
@@ -44,24 +54,47 @@ splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
 if os.path.exists(VECTORSTORE_PATH):
     vectorstore = FAISS.load_local(VECTORSTORE_PATH, OpenAIEmbeddings(), allow_dangerous_deserialization=True)
 else:
-    # topic_docs = splitter.create_documents([topic_text])
-    # vectorstore = FAISS.from_documents(topic_docs, OpenAIEmbeddings())
-    # vectorstore.save_local(VECTORSTORE_PATH)
-    # vectorstore = FAISS.new(OpenAIEmbeddings())
-    # vectorstore.save_local(VECTORSTORE_PATH)
+    print("No vectorstore found, rebuilding from MongoDB...")
 
-    # Create with one dummy document
-    dummy_doc = Document(page_content="placeholder", metadata={})
-    vectorstore = FAISS.from_documents([dummy_doc], OpenAIEmbeddings())
+    from langchain.schema import Document
 
-    # Immediately clear it
-    vectorstore.docstore._dict.clear()
-    vectorstore.index.reset()
+    questions_col = db["questions"]
+    all_questions = questions_col.find()
 
-    vectorstore.save_local(VECTORSTORE_PATH)
+    docs = []
+    for q in all_questions:
+        # Safety check in case fields are missing
+        if "text" in q and "QuestionId" in q:
+            docs.append(Document(
+                page_content=q["text"],
+                metadata={
+                    "question_id": q["QuestionId"],
+                    "base64": q.get("base64", "")  # fallback to empty string if missing
+                }
+            ))
+
+    if docs:
+        vectorstore = FAISS.from_documents(docs, OpenAIEmbeddings())
+        vectorstore.save_local(VECTORSTORE_PATH)
+        print(f"Rebuilt vectorstore from {len(docs)} questions.")
+    else:
+        print("No questions found in DB — creating empty vectorstore.")
+        vectorstore = FAISS.from_documents([Document(page_content="placeholder", metadata={})], OpenAIEmbeddings())
+        vectorstore.docstore._dict.clear()
+        vectorstore.index.reset()
+        vectorstore.save_local(VECTORSTORE_PATH)
+
 
 retriever = vectorstore.as_retriever()
 client = OpenAI()
+
+def generate_unique_question_id(existing_ids, max_tries=10):
+    for _ in range(max_tries):
+        qid = str(random.randint(100000, 999999))
+        if qid not in existing_ids:
+            return qid
+    raise Exception("Failed to generate unique QuestionId after multiple attempts.")
+
 
 # Extract text from PDF pages
 def extract_text_from_pdf(file_path):
@@ -102,6 +135,49 @@ def extract_text_with_ocr(pil_image):
 #                 "topics": []
 #             })
 #     return images
+
+def insert_classified_question(question_obj, db):
+    """
+    question_obj: {
+        "id": "page_1_question_1",
+        "text": "What is the derivative of x^2?",
+        "base64": "<base64 string>",
+        "topics": ["MA-C1", "MA-C2"]
+            or
+        "topics": ["MA-C1: Introduction to Differentiation (Year 11)"]
+    }
+    """
+    questions_col = db["questions"]
+    classifications_col = db["classification"]
+   
+    # try:
+    existing = questions_col.find_one({"QuestionId": question_obj["id"]})
+    
+    if not existing:
+        questions_col.insert_one({
+            "QuestionId": question_obj["id"],
+            "text": question_obj["text"],
+            "base64": question_obj["base64"]
+        })
+        print(f"DB: Inserted question {question_obj['id']}")
+    else:
+        print(f"DB: Skipped — Question {question_obj['id']} already exists.")
+
+    # Normalize topic strings to just "MA-XX" codes
+    topic_ids = [topic.split(":")[0].strip() for topic in question_obj["topics"]]
+
+    # Insert topic mappings
+    # 🔄 Remove any existing mappings for this question
+    classifications_col.delete_many({"QuestionId": question_obj["id"]})
+
+    # 🔁 Insert fresh topic mappings
+    for topic_id in topic_ids:
+        classifications_col.insert_one({
+            "QuestionId": question_obj["id"],
+            "TopicId": topic_id
+        })
+        print(f"🔗 Mapped {question_obj['id']} to {topic_id}")
+
 
 
 def extract_lines_with_coordinates(pil_img):
@@ -192,6 +268,7 @@ def extract_images_from_pdf(file_path, openai_api_key):
             print("Raw Y-coordinates:", y_coords)
 
             cropped_questions = []
+            existing_ids = {doc.metadata.get("question_id") for doc in vectorstore.docstore._dict.values()}
             for idx, y_start in enumerate(y_coords):
                 if idx + 1 < len(y_coords):
                     y_end = y_coords[idx + 1]
@@ -208,8 +285,10 @@ def extract_images_from_pdf(file_path, openai_api_key):
                 cropped_img.save(buffered, format="PNG")
                 img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
+                qid = generate_unique_question_id(existing_ids)
+                existing_ids.add(qid)
                 cropped_questions.append({
-                    "id": f"page_{i+1}_question_{idx+1}",
+                    "id": qid,
                     "base64": img_str,
                     "text": text,
                     "topics": []
@@ -290,11 +369,26 @@ async def classify(file: UploadFile = File(...)):
             # (CAN REMOVE THIS CHECK WHEN TESTING)
             duplicate_found = False
             for doc in vectorstore.docstore._dict.values():
-                if doc.page_content.strip() == img["text"].strip():
-                    print(f"Skipping GPT — Exact duplicate found for {img['id']}")
-                    img["topics"] = doc.metadata.get("topics", [])
+               if doc.page_content.strip() == img["text"].strip():
+                    reused_id = doc.metadata.get("question_id")
+                    print(f"🔁 Reusing existing ID {reused_id} for duplicate")
+
+                    # Fetch topics from MongoDB
+                    topic_links = list(db["classification"].find({"QuestionId": reused_id}, {"_id": 0, "TopicId": 1}))
+                    topic_ids = [t["TopicId"] for t in topic_links]
+
+                    # Map topic IDs to human-readable names
+                    topic_lookup = {
+                        t["TopicId"]: t["name"]
+                        for t in db["topics"].find({"TopicId": {"$in": topic_ids}}, {"_id": 0, "TopicId": 1, "name": 1})
+                    }
+                    full_topic_names = [topic_lookup.get(tid, tid) for tid in topic_ids]
+
+                    img["id"] = reused_id
+                    img["topics"] = full_topic_names
                     duplicate_found = True
                     break
+
 
             if duplicate_found:
                 continue  #  Skip GPT and go to next image
@@ -324,6 +418,7 @@ async def classify(file: UploadFile = File(...)):
                 }
             )
             new_docs.append(doc)
+            # insert_classified_question(img, db)
 
         if new_docs:
             vectorstore.add_documents(new_docs)
@@ -332,32 +427,38 @@ async def classify(file: UploadFile = File(...)):
             print("No new documents to add to vectorstore.")
 
         last_classified_images = images
+        
         return {"result": images}
     finally:
         os.remove(file_path)
 
-class Correction(BaseModel):
+class ImageCorrection(BaseModel):
     id: str
-    corrected_topics: List[str]
-
+    text: str
+    base64: str
+    topics: List[str]
 
 @app.post("/submit_corrections/")
-async def submit_corrections(corrections: List[Correction]):
-    # Update existing documents by replacing only the "topic" metadata
+async def submit_corrections(images: List[ImageCorrection]):
     updated_count = 0
-    for correction in corrections:
+    for img in images:
         for doc_id, doc in vectorstore.docstore._dict.items():
-            if doc.metadata.get("question_id") == correction.id:
-                doc.metadata["topics"] = correction.corrected_topics
+            if doc.metadata.get("question_id") == img.id:
+                doc.metadata["topics"] = img.topics
                 updated_count += 1
+
+        # ✅ Always insert/update in MongoDB
+        insert_classified_question({
+            "id": img.id,
+            "text": img.text,
+            "base64": img.base64,
+            "topics": img.topics
+        }, db)
 
     vectorstore.save_local(VECTORSTORE_PATH)
 
-    print("\n📚 Updated vector store contents:")
-    for i, doc in enumerate(vectorstore.docstore._dict.values()):
-        print(f"{i+1}. ID: {doc.metadata.get('question_id')} | Topics: {doc.metadata.get('topics')} | Content: {doc.page_content}")
-
     return {"message": f"Corrections saved. Updated {updated_count} documents."}
+
 
 class ImageData(BaseModel):
     base64: str
@@ -408,3 +509,64 @@ Generate a **similar but different** HSC-style question that:
         "topics": img.topics,
         "revamped_question_latex": new_question_latex
     }
+
+class QuestionRequest(BaseModel):
+    topics: List[str]
+    count: int = 10
+
+@app.post("/get-questions")
+async def get_questions(req: QuestionRequest):
+    topic_names = req.topics
+    count = req.count
+
+    # Step 1: Get Topic IDs for requested topic names
+    topic_docs = list(db["topics"].find(
+        {"name": {"$in": topic_names}}, {"_id": 0, "TopicId": 1}
+    ))
+    topic_ids = [t["TopicId"] for t in topic_docs]
+
+    # Step 2: Find all matching Question IDs from classification
+    classification_docs = list(db["classification"].find(
+        {"TopicId": {"$in": topic_ids}}, {"_id": 0, "TopicId": 1, "QuestionId": 1}
+    ))
+
+    # Step 3: Map Question IDs to their associated Topic IDs
+    question_map = {}
+    for doc in classification_docs:
+        qid = doc["QuestionId"]
+        tid = doc["TopicId"]
+        if qid not in question_map:
+            question_map[qid] = set()
+        question_map[qid].add(tid)
+
+    # Step 4: Limit to desired number of questions
+    question_ids = list(question_map.keys())[:count]
+
+    # Step 5: Fetch full question data (text + base64)
+    questions_data = list(db["questions"].find(
+        {"QuestionId": {"$in": question_ids}},
+        {"_id": 0, "QuestionId": 1, "base64": 1, "text": 1}
+    ))
+
+    # Step 6: Build topic lookup map
+    topic_lookup = {
+        t["TopicId"]: t["name"]
+        for t in db["topics"].find({}, {"_id": 0, "TopicId": 1, "name": 1})
+    }
+
+    # Step 7: Construct final response objects
+    final_questions = []
+    for q in questions_data:
+        qid = q["QuestionId"]
+        topic_ids_for_q = question_map.get(qid, [])
+        topics = [topic_lookup.get(tid, "Unknown Topic") for tid in topic_ids_for_q]
+
+        final_questions.append({
+            "id": qid,                       # required for revamp payload
+            "QuestionId": qid,               # optional for frontend use
+            "base64": q.get("base64", ""),   # base64 image
+            "text": q.get("text", ""),       # original LaTeX text
+            "topics": topics                 # human-readable topics
+        })
+
+    return JSONResponse(content={"questions": final_questions})
