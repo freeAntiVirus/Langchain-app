@@ -9,3 +9,6 @@ uvicorn
 Pillow  
 pydantic
 faiss-cpu 
+pymongo
+pytess
+pytesseract
