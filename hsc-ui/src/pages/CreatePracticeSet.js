@@ -10,6 +10,7 @@ function CreatePracticeSet() {
   const [questionCount, setQuestionCount] = useState(10);
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [questions, setQuestions] = useState([]);
+  const [visibleQuestions, setVisibleQuestions] = useState([]); // track display
 
   const handleGenerate = async () => {
     console.log("handleGenerate triggered");
@@ -19,12 +20,16 @@ function CreatePracticeSet() {
         count: questionCount,
       });
       console.log("Axios response:", res.data);
-      setQuestions(res.data.questions || []);
+      const fetchedQuestions = res.data.questions || [];
+      setQuestions(fetchedQuestions);
+      setVisibleQuestions(fetchedQuestions); // sync both states
     } catch (err) {
       console.error("Axios failed:", err);
       setQuestions([]);
+      setVisibleQuestions([]);
     }
   };
+
 
   return (
     <div className="p-6">
@@ -61,8 +66,13 @@ function CreatePracticeSet() {
 
         {/* Right Panel */}
         <div className="w-full md:w-[50%] h-full flex flex-col gap-4">
-          <ScrollableTextBox questions={questions} />
-          <DownloadPdfButton />
+          <ScrollableTextBox
+            questions={questions}
+            onQuestionsUpdate={setVisibleQuestions}
+          />
+          <DownloadPdfButton
+            questions={visibleQuestions}
+          />
         </div>
       </div>
     </div>
