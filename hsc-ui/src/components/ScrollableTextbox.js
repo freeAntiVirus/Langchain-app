@@ -56,13 +56,12 @@ const ScrollableTextBox = ({ questions = [], onQuestionsUpdate, subject }) => {
   const [loadingIndex, setLoadingIndex] = useState(null);
   const [localQuestions, setLocalQuestions] = useState(questions);
   
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setLocalQuestions(questions);
     if (onQuestionsUpdate) {
       onQuestionsUpdate(questions);
     }
-  }, [questions]);
+  }, [questions, onQuestionsUpdate]); // ✅ safe now
 
   const fetchRevamp = async (question, index) => {
     try {

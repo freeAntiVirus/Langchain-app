@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import axios from "axios";
 
 import SubjectTopicPicker from "../components/SubjectTopicPicker"; // ⬅️ new
@@ -12,6 +12,11 @@ function CreatePracticeSet() {
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [visibleQuestions, setVisibleQuestions] = useState([]); // track display
+  
+  const handleQuestionsUpdate = useCallback((updated) => {
+    setVisibleQuestions(updated);
+  }, []); // ✅ stable function reference
+
 
   const handleGenerate = async () => {
     console.log("handleGenerate triggered");
@@ -72,7 +77,7 @@ function CreatePracticeSet() {
         <div className="w-full md:w-[50%] h-full flex flex-col gap-4">
           <ScrollableTextBox
             questions={questions}
-            onQuestionsUpdate={setVisibleQuestions}
+            onQuestionsUpdate={handleQuestionsUpdate}
             subject={subject}
           />
           <DownloadPdfButton

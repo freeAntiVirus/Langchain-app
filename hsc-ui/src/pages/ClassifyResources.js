@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import "../App.css";
-import { MathJaxContext, MathJax } from "better-react-mathjax";
+import { MathJaxContext } from "better-react-mathjax";
 import DropdownMenu from "../components/DropDown";
 
 
@@ -126,51 +126,11 @@ const SUBJECTS = [
   // "Mathematics Extension 1", // add more when ready
 ];
 
-function convertToAlignedLatex(raw) {
-  const lines = raw
-    .split(/\\+/)
-    .map(line => line.trim())
-    .filter(Boolean)
-    .map(line => `&\\text{${line}} \\\\`);
-  
-  return `\\[\n\\begin{aligned}\n${lines.join('\n')}\n\\end{aligned}\n\\]`;
-}
-
-
-const RevampPopup = ({ questionLatex, onClose }) => {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-2xl relative">
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-xl"
-        >
-          ✕
-        </button>
-        <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">🔁 Revamped Question</h2>
-        <div className="text-gray-700 dark:text-gray-300 overflow-y-auto max-h-[60vh] px-1">
-          <MathJax dynamic>{convertToAlignedLatex(questionLatex)}</MathJax>
-
-        </div>
-        <div className="mt-6 flex justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 function ClassifyResources() {
   const [file, setFile] = useState(null);
   const [images, setImages] = useState([]);
   const [correctedTopics, setCorrectedTopics] = useState({});
   const [submitting, setSubmitting] = useState(false); // ⬅️ NEW
-  const [showPopup, setShowPopup] = useState(false);
   const [subject, setSubject] = useState("Mathematics Advanced");
 
     const [isOpen, setIsOpen] = useState(false);

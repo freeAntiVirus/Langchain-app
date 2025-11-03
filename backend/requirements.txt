@@ -6,6 +6,7 @@ langchain
 langchain-core
 langchain-community
 fastapi
+fastapi.responses
 uvicorn
 Pillow  
 pydantic
@@ -13,3 +14,7 @@ faiss-cpu
 pymongo
 pytess
 pytesseract
+typing
+pdf2image
+pathlib 
+langchain.schema

@@ -97,10 +97,10 @@ const DownloadPdfButton = ({ questions = [] }) => {
       // Normal content (wrapped, left-aligned under label)
       doc.setFont(undefined, "normal");
       const contentLines = doc.splitTextToSize(topicContent, 180);
-      contentLines.forEach((line) => {
-        doc.text(15, y, line); // left-align
+      for (const line of contentLines) {
+        doc.text(15, y, line);
         y += 6;
-      });
+      }
 
       y += 4;
 
