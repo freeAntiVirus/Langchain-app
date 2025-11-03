@@ -1,28 +1,25 @@
 import React, { useState, useRef, useEffect } from "react";
 
-const DropdownMenu = () => {
+function DropdownMenu({ label, items, value, onChange }) {
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef();
+  const ref = useRef(null);
 
-  const toggleDropdown = () => {
-    setIsOpen((prev) => !prev);
-  };
-
-  // Optional: close dropdown if clicked outside
+  console.log("DropdownMenu props:", { label, items, value });
+  // Close on outside click
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
+    const handle = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setIsOpen(false);
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
   }, []);
 
-  console.log("Dropdown isOpen:", isOpen);
+  const toggleDropdown = () => setIsOpen((prev) => !prev);
+
+
   return (
-    <div className="relative inline-block text-left" ref={dropdownRef}>
-      <button
+    <div className="relative inline-block text-left" ref={ref}>
+       <button
         onClick={toggleDropdown}
         className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
         type="button"
@@ -46,21 +43,35 @@ const DropdownMenu = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute z-10 mt-2 bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700">
-          <ul className="py-2 text-sm text-gray-700 dark:text-gray-200">
-            <li>
-              <a
-                href="#"
-                className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-              >
-                Mathematics Advanced
-              </a>
-            </li>
+        <div className="absolute z-10 mt-2 w-56 rounded-lg bg-white shadow-sm ring-1 ring-black/5">
+          <ul
+            role="listbox"
+            aria-label={label}
+            className="max-h-64 overflow-y-auto py-2 text-sm text-gray-800"
+          >
+            {items?.map((item) => (
+              <li key={item}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={item === value}
+                  onClick={() => {
+                    onChange(item);
+                    setIsOpen(false);
+                  }}
+                  className={`block w-full px-4 py-2 text-left hover:bg-gray-100 ${
+                    item === value ? "font-semibold" : ""
+                  }`}
+                >
+                  {item}
+                </button>
+              </li>
+            ))}
           </ul>
         </div>
       )}
     </div>
   );
-};
+}
 
-export default DropdownMenu;
+export default DropdownMenu

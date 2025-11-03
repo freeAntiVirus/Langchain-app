@@ -1,51 +1,27 @@
-\documentclass{article}
-\usepackage{pgfplots}
-\pgfplotsset{compat=1.18}
-\usepackage{amsmath}
-
+\documentclass[tikz,border=2pt]{standalone}
+\usepackage{tikz}
 \begin{document}
-
-\section*{Cumulative Distribution Function $F(x)$}
-
-\[
-F(x) = 
-\begin{cases}
-0, & x < 0 \\
-x^3, & 0 \leq x \leq 1 \\
-1, & x > 1
-\end{cases}
-\]
-
-\begin{center}
 \begin{tikzpicture}
-  \begin{axis}[
-    axis lines = middle,
-    xlabel = {$x$},
-    ylabel = {$F(x)$},
-    ymin = -0.1, ymax = 1.2,
-    xmin = -0.5, xmax = 1.5,
-    xtick = {0, 1},
-    ytick = {0, 0.5, 1},
-    domain=-0.5:1.5,
-    samples=100,
-    width=12cm,
-    height=7cm,
-    smooth
-  ]
-    % Plot for x^3 from 0 to 1
-    \addplot[blue, thick, domain=0:1] {x^3};
-    
-    % Left flat part
-    \addplot[blue, thick, domain=-0.5:0] {0};
-
-    % Right flat part
-    \addplot[blue, thick, domain=1:1.5] {1};
-
-    % Dots at ends
-    \addplot[blue, only marks, mark=*, mark size=1pt] coordinates {(0,0)};
-    \addplot[blue, only marks, mark=*, mark size=1pt] coordinates {(1,1)};
-  \end{axis}
+  % Axes
+  \draw[->] (-1.5,0) -- (5.5,0) node[right] {$x$};
+  \draw[->] (0,-1) -- (0,6) node[above] {$y$};
+  
+  % Ticks and labels on x-axis
+  \foreach \x in {-1, 0, 1, 2, 3, 4, 5}
+    \draw (\x,0.1) -- (\x,-0.1) node[below] {\x};
+  
+  % Ticks and labels on y-axis
+  \foreach \y in {1, 2, 3, 4, 5}
+    \draw (0.1,\y) -- (-0.1,\y) node[left] {\y};
+  
+  % Parabola
+  \draw[domain=-1:5, smooth, variable=\x] plot ({\x},{\x*\x - 4*\x + 3});
+  
+  % Turning point
+  \filldraw (2,-1) circle (2pt) node[above right] {Turning Point $(2, -1)$};
+  
+  % Additional points
+  \filldraw (1,0) circle (1pt) node[below right] {$(1, 0)$};
+  \filldraw (3,0) circle (1pt) node[below left] {$(3, 0)$};
 \end{tikzpicture}
-\end{center}
-
 \end{document}
