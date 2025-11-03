@@ -21,7 +21,7 @@ function CreatePracticeSet() {
   const handleGenerate = async () => {
     console.log("handleGenerate triggered");
     try {
-      const res = await axios.post("http://localhost:8000/get-questions", {
+      const res = await axios.post(`${API_URL}/get-questions`, {
         subject,               // ⬅️ optional but often useful
         topics: selectedTopics,
         count: questionCount,

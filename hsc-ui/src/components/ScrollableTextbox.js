@@ -3,7 +3,7 @@ import axios from "axios";
 import { MathJaxContext } from "better-react-mathjax";
 import { DeleteButton } from "../components/Buttons";
 import LatexView from "../components/LatexView"; // ✅ import your LaTeX renderer
-
+import {API_URL} from "../index.js"
 const RevampPopup = ({ questionLatex, onClose }) => {
   const captureRef = useRef();
 
@@ -66,7 +66,7 @@ const ScrollableTextBox = ({ questions = [], onQuestionsUpdate, subject }) => {
   const fetchRevamp = async (question, index) => {
     try {
       setLoadingIndex(index);
-      const res = await axios.post("http://localhost:8000/revamp_question/", {
+      const res = await axios.post(`${API_URL}/revamp_question/`, {
         img: {
           id: question.id || question.QuestionId,
           base64: question.base64,

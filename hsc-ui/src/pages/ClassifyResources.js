@@ -143,7 +143,7 @@ function ClassifyResources() {
 
     try {
       console.log("Sending subject:", subject);
-      const res = await axios.post("http://localhost:8000/classify/", formData, {
+      const res = await axios.post(`${API_URL}/classify/`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       console.log("📦 Response from /classify/:", res.data);
@@ -178,7 +178,7 @@ function ClassifyResources() {
 
     try {
       setSubmitting(true);
-      await axios.post("http://localhost:8000/submit_corrections/", payload);
+      await axios.post(`${API_URL}/submit_corrections/`, payload);
       alert("Corrections submitted!");
       setCorrectedTopics({});
       setImages([]);

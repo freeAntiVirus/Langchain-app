@@ -1,28 +1,12 @@
-import asyncio
-import json
-import os
-import io
-import base64
+
 import re
 import pdfplumber
 from PIL import Image
-from fastapi import FastAPI, File, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from pydantic import BaseModel
-from typing import List
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_community.vectorstores import FAISS
-from openai import OpenAI
-from langchain.schema import Document, HumanMessage
+from langchain_openai import ChatOpenAI
 import pytesseract
-from pydantic import BaseModel
-from fastapi.responses import JSONResponse
 import ast
-from typing import List, Optional
-from pymongo import MongoClient
 import random
-from pdf2image import convert_from_path
 
 def generate_unique_question_id(existing_ids, max_tries=10):
     for _ in range(max_tries):

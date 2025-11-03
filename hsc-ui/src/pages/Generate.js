@@ -29,7 +29,7 @@ function Generate() {
     setDiagramError("");
 
     try {
-      const res = await axios.post("http://localhost:8000/generate-question-by-topics", {
+      const res = await axios.post(`${API_URL}/generate-question-by-topics`, {
         topics: selectedTopics,
         exemplar_count: 5,
         temperature: 0.5,
@@ -60,7 +60,7 @@ function Generate() {
     }
 
     try {
-      const res = await axios.post("http://localhost:8000/generate-diagram-for-question", {
+      const res = await axios.post(`${API_URL}/generate-diagram-for-question`, {
         question_latex: generatedLatex,
         topics: selectedTopics,
         render_target: "svg",      // ask backend for SVG (best UX)
