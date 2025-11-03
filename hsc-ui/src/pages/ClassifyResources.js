@@ -3,6 +3,7 @@ import axios from "axios";
 import "../App.css";
 import { MathJaxContext } from "better-react-mathjax";
 import DropdownMenu from "../components/DropDown";
+import {API_URL} from "../index.js"
 
 
 const topics_data = [

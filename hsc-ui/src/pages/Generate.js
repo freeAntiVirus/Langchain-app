@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import LatexView from "../components/LatexView";
 import SubjectTopicPicker from "../components/SubjectTopicPicker"; // ⬅️ new
+import {API_URL} from "../index.js"
 
 
 function Generate() {

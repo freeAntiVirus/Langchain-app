@@ -5,6 +5,7 @@ import SubjectTopicPicker from "../components/SubjectTopicPicker"; // ⬅️ new
 import { GenerateButton, DownloadPdfButton } from "../components/Buttons";
 import ScrollableTextBox from "../components/ScrollableTextbox";
 import QuestionNumberSlider from "../components/Slider";
+import {API_URL} from "../index.js"
 
 function CreatePracticeSet() {
   const [questionCount, setQuestionCount] = useState(10);
