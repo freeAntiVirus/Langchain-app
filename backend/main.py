@@ -11,9 +11,8 @@ from dotenv import load_dotenv
 from pydantic import BaseModel
 from typing import List
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_community.vectorstores import FAISS
 from openai import OpenAI
-from langchain.schema import Document, HumanMessage
+from langchain_core.documents import Document
 import pytesseract
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
@@ -29,7 +28,6 @@ from pathlib import Path
 from collections import defaultdict
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
-from langchain.schema import Document
 import os
 
 load_dotenv()
