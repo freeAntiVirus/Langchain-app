@@ -17,4 +17,3 @@ pytesseract
 typing
 pdf2image
 pathlib 
-langchain.schema

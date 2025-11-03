@@ -12,7 +12,6 @@ from pydantic import BaseModel
 from typing import List
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from openai import OpenAI
 from langchain.schema import Document, HumanMessage
 import pytesseract
