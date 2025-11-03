@@ -17,3 +17,4 @@ pytesseract
 typing
 pdf2image
 pathlib 
+python-multipart
