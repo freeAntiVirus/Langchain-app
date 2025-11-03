@@ -73,6 +73,7 @@ function CreatePracticeSet() {
           <ScrollableTextBox
             questions={questions}
             onQuestionsUpdate={setVisibleQuestions}
+            subject={subject}
           />
           <DownloadPdfButton
             questions={visibleQuestions}

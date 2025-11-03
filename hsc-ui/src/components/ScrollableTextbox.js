@@ -2,14 +2,17 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { MathJax, MathJaxContext } from "better-react-mathjax";
 import { DeleteButton } from "../components/Buttons";
+import LatexView from "../components/LatexView"; // ✅ import your LaTeX renderer
+
 import html2canvas from "html2canvas";
 
-const RevampPopup = ({ questionLatex, onClose}) => {
+const RevampPopup = ({ questionLatex, onClose }) => {
   const captureRef = useRef();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-2xl relative">
+        {/* Close Button */}
         <button
           onClick={onClose}
           className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-xl"
@@ -17,18 +20,24 @@ const RevampPopup = ({ questionLatex, onClose}) => {
           ✕
         </button>
 
-        {/* Heading (not captured) */}
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">🔁 Revamped Question</h2>
+        {/* Heading */}
+        <h2 className="text-xl font-semibold mb-4 text-gray-800">
+          🔁 Revamped Question
+        </h2>
 
-        {/* This is the actual content that will be captured */}
-        <div ref={captureRef}>
-          <div className="overflow-auto px-1 max-h-[70vh]">
-          <div ref={captureRef} className="inline-block w-full">
-            <MathJax dynamic>{questionLatex}</MathJax>
+        {/* Content Area (capturable) */}
+        <MathJaxContext> {/* ✅ Add this wrapper */}
+          <div ref={captureRef}>
+            <div className="overflow-auto px-1 max-h-[70vh]">
+              <div className="inline-block w-full">
+                {/* ✅ Use LatexView instead of MathJax directly */}
+                <LatexView latex={questionLatex} />
+              </div>
+            </div>
           </div>
-        </div>
-        </div>
+        </MathJaxContext>
 
+        {/* Footer Buttons */}
         <div className="mt-6 flex justify-end gap-2">
           <button
             onClick={onClose}
@@ -43,7 +52,7 @@ const RevampPopup = ({ questionLatex, onClose}) => {
 };
 
 
-const ScrollableTextBox = ({ questions = [], onQuestionsUpdate }) => {
+const ScrollableTextBox = ({ questions = [], onQuestionsUpdate, subject }) => {
   const [revampQuestion, setRevampQuestion] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [loadingIndex, setLoadingIndex] = useState(null);
@@ -66,6 +75,7 @@ const ScrollableTextBox = ({ questions = [], onQuestionsUpdate }) => {
           text: question.text,
           topics: question.topics,
         },
+        subject: subject
       });
       setRevampQuestion(res.data.revamped_question_latex);
       setShowPopup(true);

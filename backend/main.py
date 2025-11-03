@@ -500,10 +500,65 @@ class ImageData(BaseModel):
 
 class RevampRequest(BaseModel):
     img: ImageData
+    subject: str
+    
+BIOLOGY_REVAMP_PROMPT = r"""
+You are a Biology HSC question rewriter.
+
+Your task is to revamp the given question to create ONE NEW UNIQUE question that tests the same concepts and remains consistent with the given question's difficulty, but 
+uses a different scenario or different phrasing.
+
+Question: 
+{question_text}
+
+Question topic(s):
+{question_topics}
+
+STRUCTURE RULES:
+1) Keep the question in the same general format (e.g., multiple choice (a. b. c. d.), short answer, etc.).
+3) Keep terminology and notation consistent with the subject area.
+4) Avoid adding unrelated content or off-topic information.
+5) Do NOT include marks, “Question X”, diagrams, page furniture, or IDs.
+
+LATEX RULES:
+- Use plain text for Biology unless referring to chemical/molecular notation (e.g., ATP, DNA, \(H_2O\)).
+- Do NOT use LaTeX environments such as \begin{{align}}, TikZ, or tables.
+Return only the raw question text (no explanations or commentary).
+"""
+
+MATH_REVAMP_PROMPT = r"""You are a HSC question rewriter that outputs questions in valid MathJax/KaTeX-safe LaTeX format.
+
+Your task is to revamp the given question to create ONE NEW UNIQUE question that tests the same concepts and remains consistent with the given question's difficulty, but 
+uses a different scenario or different phrasing.
+
+Question: 
+{question_text}
+
+Question topic(s):
+{question_topics}
+
+STRUCTURE RULES:
+1) Keep the question in the same general format (e.g., multiple choice (a. b. c. d.), short answer, etc.).
+3) Keep terminology and notation consistent with the subject area.
+4) Avoid adding unrelated content or off-topic information.
+5) Do NOT include marks, “Question X”, diagrams, page furniture, or IDs.
+
+LATEX RULES:
+- Use only MathJax/KaTeX-safe LaTeX syntax.
+- Inline math: \( ... \)
+- Display math: \[ ... \] or \\begin{{align*}} ... \\end{{align*}}
+- Do not use \\begin{{enumerate}}, \\item, \\tabular, \\center, TikZ, or \\boxed.
+- Do not wrap LaTeX in triple backticks or prepend "latex".
+- Return only the raw LaTeX content.
+
+- Do not include explanations, reasoning, or extra commentary.
+"""
 
 @app.post("/revamp_question/")
 async def revamp_question(req: RevampRequest):
     img = req.img
+    subject = req.subject
+    print("WOWOWW",subject)
     print("Received image:", img.text, img.topics)
 
     if not img.text or not img.topics:
@@ -512,39 +567,29 @@ async def revamp_question(req: RevampRequest):
             status_code=400
         )
 
-    prompt = f"""
-The original question was:
-\"{img.text}\"
+      # Format the prompt
+    if req.subject == "Biology":
+        prompt_template = BIOLOGY_REVAMP_PROMPT
+    else: 
+        prompt_template = MATH_REVAMP_PROMPT
 
-It was classified under the following topics:
-{', '.join(img.topics)}
-
-✅ Generate a **similar but different** HSC-style math question in proper **LaTeX format**.
-
-Instructions:
-- Target the **same topics**
-- Do **NOT** include "Question X", "3 marks", "Office Use Only", or ID numbers
-- Mimic the **structure and spacing** of the original question — if the original had parts on separate lines, maintain similar line separation
-- If the question has parts (e.g. (a), (b)), split each part on a **new line**
-- **Ignore any diagrams or image references** — do not include them
-- DO NOT use `\\begin{{enumerate}}`, `\\item`, `\\begin{{tabular}}`, `\\begin{{center}}`, or any LaTeX commands unsupported by MathJax
-- Use **\\( ... \\)** for inline math
-- Use **\\[ ... \\]** or `\\begin{{align*}} ... \\end{{align*}}` for display math
-- Only return the **question** – no explanations or commentary
-- Output must be clean LaTeX, ready to render with MathJax
-"""
-
+    user_prompt = prompt_template.format(
+        question_text = img.text,
+        question_topics = img.topics
+    )
+    print(user_prompt)
+    prompt = user_prompt
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
-            {"role": "system", "content": "You are a creative HSC Mathematics teacher who writes high-quality math questions in LaTeX."},
+            {"role": "system", "content": "You are a creative HSC teacher who writes high-qualit HSC questions in LaTeX."},
             {"role": "user", "content": prompt}
         ],
         temperature=0.7
     )
 
     new_question_latex = response.choices[0].message.content.strip()
-
+    print(new_question_latex)
     return {
         "original_text": img.text,
         "topics": img.topics,
