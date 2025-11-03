@@ -1,12 +1,12 @@
-
-
-
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { MathJax, MathJaxContext } from "better-react-mathjax";
+import { DeleteButton } from "../components/Buttons";
+import html2canvas from "html2canvas";
 
-// Revamp question popup
-const RevampPopup = ({ questionLatex, onClose }) => {
+const RevampPopup = ({ questionLatex, onClose}) => {
+  const captureRef = useRef();
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-2xl relative">
@@ -16,11 +16,20 @@ const RevampPopup = ({ questionLatex, onClose }) => {
         >
           ✕
         </button>
+
+        {/* Heading (not captured) */}
         <h2 className="text-xl font-semibold mb-4 text-gray-800">🔁 Revamped Question</h2>
-        <div className="text-gray-700 overflow-y-auto max-h-[60vh] px-1">
-          <MathJax dynamic>{questionLatex}</MathJax>
+
+        {/* This is the actual content that will be captured */}
+        <div ref={captureRef}>
+          <div className="overflow-auto px-1 max-h-[70vh]">
+          <div ref={captureRef} className="inline-block w-full">
+            <MathJax dynamic>{questionLatex}</MathJax>
+          </div>
         </div>
-        <div className="mt-6 flex justify-end">
+        </div>
+
+        <div className="mt-6 flex justify-end gap-2">
           <button
             onClick={onClose}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -33,10 +42,19 @@ const RevampPopup = ({ questionLatex, onClose }) => {
   );
 };
 
-const ScrollableTextBox = ({ questions = [] }) => {
+
+const ScrollableTextBox = ({ questions = [], onQuestionsUpdate }) => {
   const [revampQuestion, setRevampQuestion] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [loadingIndex, setLoadingIndex] = useState(null);
+  const [localQuestions, setLocalQuestions] = useState(questions);
+
+  useEffect(() => {
+    setLocalQuestions(questions);
+    if (onQuestionsUpdate) {
+      onQuestionsUpdate(questions);
+    }
+  }, [questions]);
 
   const fetchRevamp = async (question, index) => {
     try {
@@ -59,13 +77,21 @@ const ScrollableTextBox = ({ questions = [] }) => {
     }
   };
 
+  const handleDelete = (indexToDelete) => {
+    const updated = localQuestions.filter((_, index) => index !== indexToDelete);
+    setLocalQuestions(updated);
+    if (onQuestionsUpdate) {
+      onQuestionsUpdate(updated);
+    }
+  };
+
   return (
     <MathJaxContext>
       <div className="h-[500px] overflow-y-auto p-4 border rounded-lg bg-white shadow w-full text-gray-700">
-        {questions.length === 0 ? (
+        {localQuestions.length === 0 ? (
           <p className="text-sm text-gray-500">No questions to display.</p>
         ) : (
-          questions.map((q, index) => (
+          localQuestions.map((q, index) => (
             <div
               key={q.QuestionId || index}
               className="bg-white border rounded-lg shadow p-4 mb-6 relative"
@@ -82,13 +108,16 @@ const ScrollableTextBox = ({ questions = [] }) => {
                 {q.topics?.join(", ") || "No prediction"}
               </div>
 
-              <button
-                onClick={() => fetchRevamp(q, index)}
-                className="absolute top-2 right-2 bg-yellow-300 px-2 py-1 rounded text-sm hover:bg-yellow-400"
-                disabled={loadingIndex === index}
-              >
-                {loadingIndex === index ? "Loading..." : "Revamp 🔁"}
-              </button>
+              <div className="absolute top-2 right-2 flex gap-2">
+                <button
+                  onClick={() => fetchRevamp(q, index)}
+                  className="bg-yellow-300 px-2 py-1 rounded text-sm hover:bg-yellow-400"
+                  disabled={loadingIndex === index}
+                >
+                  {loadingIndex === index ? "Loading..." : "Revamp"}
+                </button>
+                <DeleteButton onClick={() => handleDelete(index)} />
+              </div>
             </div>
           ))
         )}
