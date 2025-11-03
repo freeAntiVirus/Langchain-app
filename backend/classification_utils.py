@@ -121,6 +121,87 @@ def crop_image_by_y_coords(img, y_start, y_end):
 def extract_text_with_ocr(pil_image):
     return pytesseract.image_to_string(pil_image)
 
+def _to_rgb(img):
+    return img.convert("RGB") if img.mode != "RGB" else img
+
+def _resize_to_height(img, target_h):
+    w, h = img.size
+    if h == target_h:
+        return img
+    new_w = int(w * (target_h / h))
+    return img.resize((new_w, target_h), Image.LANCZOS)
+
+def _stitch_double_spreads(pages, gap=32, bg_color="white"):
+    """
+    Arrange pages as 2 columns per row (double-page spreads), stacked into one image.
+    Odd final page is centered in its row.
+    """
+    pages = [_to_rgb(p) for p in pages]
+
+    # Build row images (each row has up to 2 pages)
+    rows = []
+    for i in range(0, len(pages), 2):
+        left = pages[i]
+        right = pages[i+1] if i+1 < len(pages) else None
+
+        # Unify heights within the row
+        target_h = max(left.height, right.height if right else 0)
+        left_r = _resize_to_height(left, target_h)
+        if right:
+            right_r = _resize_to_height(right, target_h)
+
+        if right:
+            row_w = left_r.width + gap + right_r.width
+            row = Image.new("RGB", (row_w, target_h), bg_color)
+            x = 0
+            row.paste(left_r, (x, 0)); x += left_r.width + gap
+            row.paste(right_r, (x, 0))
+        else:
+            # Single page centered
+            row_w = left_r.width + 2 * gap
+            row = Image.new("RGB", (row_w, target_h), bg_color)
+            x = (row_w - left_r.width) // 2
+            row.paste(left_r, (x, 0))
+
+        rows.append(row)
+
+    # Stack rows vertically with gaps
+    if not rows:
+        raise ValueError("No pages to stitch.")
+    vgap = gap
+    total_w = max(r.width for r in rows)
+    total_h = sum(r.height for r in rows) + vgap * (len(rows) - 1)
+
+    canvas = Image.new("RGB", (total_w, total_h), bg_color)
+    y = 0
+    for r in rows:
+        # center each row horizontally on the canvas
+        x = (total_w - r.width) // 2
+        canvas.paste(r, (x, y))
+        y += r.height + vgap
+
+    return canvas
+
+from collections import Counter
+
+def tally_topics(corrections_context: str):
+    """
+    Extracts all topic names from the corrections context string and counts frequency.
+    Returns a Counter object sorted by most common.
+    """
+    topics_list = []
+
+    # Regex to find anything inside "['...']" or list-like parts
+    matches = re.findall(r"\['([^]]+)'\]", corrections_context)
+    for match in matches:
+        # match could be "MA-F1: ..., 'MA-C3: ...'"
+        for topic in [t.strip().strip("'").strip('"') for t in match.split(",")]:
+            if topic:
+                topics_list.append(topic)
+
+    return Counter(topics_list)
+
+
 # NOTE: This function contains the cropping logic which we've decided to remove for now
 # def extract_images_from_pdf(file_path, openai_api_key):
 #     images = []

@@ -1,13 +1,14 @@
-import DropdownCheckbox from "../components/DropDownCheckBox";
-import DropdownMenu from "../components/DropDown";
-import { GenerateButton, DownloadPdfButton } from "../components/Buttons";
-import ScrollableTextBox from "../components/ScrollableTextbox";
-import QuestionNumberSlider from "../components/Slider";
 import React, { useState } from "react";
 import axios from "axios";
 
+import SubjectTopicPicker from "../components/SubjectTopicPicker"; // ⬅️ new
+import { GenerateButton, DownloadPdfButton } from "../components/Buttons";
+import ScrollableTextBox from "../components/ScrollableTextbox";
+import QuestionNumberSlider from "../components/Slider";
+
 function CreatePracticeSet() {
   const [questionCount, setQuestionCount] = useState(10);
+  const [subject, setSubject] = useState("Mathematics Advanced"); // ⬅️ new
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [questions, setQuestions] = useState([]);
 
@@ -15,6 +16,7 @@ function CreatePracticeSet() {
     console.log("handleGenerate triggered");
     try {
       const res = await axios.post("http://localhost:8000/get-questions", {
+        subject,               // ⬅️ optional but often useful
         topics: selectedTopics,
         count: questionCount,
       });
@@ -32,16 +34,18 @@ function CreatePracticeSet() {
         {/* Left Panel */}
         <div className="w-full md:w-[50%]">
           <h1 className="text-2xl font-bold mb-4">Create Practice Set</h1>
-          <p className="mb-6">This is where you can create a practice set.</p>
+          <p className="mb-6">Select the subject and topics you want to practice.</p>
 
           <div className="flex flex-wrap gap-4 items-end">
-            <div>
-              <h2 className="text-sm font-medium mb-1">Select Subject</h2>
-              <DropdownMenu />
-            </div>
-            <div>
-              <h2 className="text-sm font-medium mb-1">Select Topics</h2>
-              <DropdownCheckbox onSelectionChange={setSelectedTopics} />
+            <div className="w-full">
+              <h2 className="text-sm font-medium mb-1">Subject & Topics</h2>
+              <SubjectTopicPicker
+                initialSubject={subject}
+                onChange={(s, topics) => {
+                  setSubject(s);
+                  setSelectedTopics(topics);
+                }}
+              />
             </div>
           </div>
 

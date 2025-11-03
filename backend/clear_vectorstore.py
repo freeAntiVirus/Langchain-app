@@ -1,59 +1,67 @@
 import os
+import shutil
 from dotenv import load_dotenv
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 load_dotenv()
 
-VECTORSTORE_PATH = "faiss_index"
+VECTORSTORE_ROOT = "faiss_indexes"  # 👈 root directory containing all subject stores
 TOPIC_FILE = "topics.txt"
-splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
 
-def clear_faiss_vectorstore(index_path=VECTORSTORE_PATH):
+
+def clear_all_faiss_vectorstores(root_path=VECTORSTORE_ROOT):
     """
-    Deletes the FAISS vector store files at the given path.
+    Deletes all FAISS vectorstore subdirectories under the given root.
     """
-    if not os.path.exists(index_path):
-        print("Vectorstore directory does not exist.")
+    if not os.path.exists(root_path):
+        print(f"Vectorstore root '{root_path}' does not exist.")
         return
-    removed = False
-    for file in os.listdir(index_path):
-        file_path = os.path.join(index_path, file)
-        if os.path.isfile(file_path):
-            os.remove(file_path)
-            print(f"Deleted: {file_path}")
-            removed = True
-    os.rmdir(index_path)
-    if removed:
-        print("Vectorstore cleared.")
-    else:
-        print("No files found to delete in vectorstore.")
 
-def print_faiss_vectorstore(index_path=VECTORSTORE_PATH):
+    removed = False
+    for name in os.listdir(root_path):
+        subdir = os.path.join(root_path, name)
+        if os.path.isdir(subdir):
+            shutil.rmtree(subdir)
+            print(f"Deleted vectorstore: {subdir}")
+            removed = True
+
+    if removed:
+        print("✅ All vectorstores cleared.")
+    else:
+        print("⚠️ No vectorstores found to delete.")
+
+
+def print_all_faiss_vectorstores(root_path=VECTORSTORE_ROOT):
     """
-    Loads the FAISS vector store and prints the stored documents/texts.
+    Loads and prints all FAISS vectorstores under the root folder.
     """
-    index_file = os.path.join(index_path, "index.faiss")
-    store_file = os.path.join(index_path, "index.pkl")
-    
-    if not os.path.exists(index_file) or not os.path.exists(store_file):
-        print("No FAISS index found to load.")
+    if not os.path.exists(root_path):
+        print(f"Vectorstore root '{root_path}' does not exist.")
         return
 
     embeddings = OpenAIEmbeddings()
-    db = FAISS.load_local(index_path, embeddings, allow_dangerous_deserialization=True)
-    for i, (doc_id, doc) in enumerate(db.docstore._dict.items()):
-        print(f"Document {i+1} - ID: {doc_id}")
-        print(doc.page_content)
-        print("-" * 40)
+    for name in os.listdir(root_path):
+        subdir = os.path.join(root_path, name)
+        index_file = os.path.join(subdir, "index.faiss")
+        store_file = os.path.join(subdir, "index.pkl")
+
+        if os.path.isdir(subdir) and os.path.exists(index_file) and os.path.exists(store_file):
+            print(f"\n🔍 Vectorstore: {name}")
+            db = FAISS.load_local(subdir, embeddings, allow_dangerous_deserialization=True)
+            for i, (doc_id, doc) in enumerate(db.docstore._dict.items()):
+                print(f"  Document {i+1} - ID: {doc_id}")
+                print(f"    {doc.page_content[:150]}...")  # print first 150 chars
+        else:
+            print(f"\n⚠️ No FAISS index found in {subdir}")
+
 
 if __name__ == "__main__":
-    print("🔍 Initial vectorstore:")
-    print_faiss_vectorstore()
-    
-    print("\n🧹 Clearing vectorstore...")
-    clear_faiss_vectorstore()
-    
-    # print("\n📦 New vectorstore contents:")
-    # print_faiss_vectorstore()
+    print("🔍 Current vectorstores:")
+    print_all_faiss_vectorstores()
+
+    print("\n🧹 Clearing ALL vectorstores...")
+    clear_all_faiss_vectorstores()
+
+    print("\n🔍 After clearing:")
+    print_all_faiss_vectorstores()
