@@ -92,18 +92,4 @@ function DropdownCheckbox({ label, topics, selected, onSelectionChange }) {
   );
 }
 
-function ChevronDownIcon() {
-  return (
-    <svg
-      className="h-3 w-3"
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 10 6"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 export default DropdownCheckbox;

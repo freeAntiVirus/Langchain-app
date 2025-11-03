@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { MathJax, MathJaxContext } from "better-react-mathjax";
+import { MathJaxContext } from "better-react-mathjax";
 import { DeleteButton } from "../components/Buttons";
 import LatexView from "../components/LatexView"; // ✅ import your LaTeX renderer
-
-import html2canvas from "html2canvas";
 
 const RevampPopup = ({ questionLatex, onClose }) => {
   const captureRef = useRef();
@@ -57,7 +55,8 @@ const ScrollableTextBox = ({ questions = [], onQuestionsUpdate, subject }) => {
   const [showPopup, setShowPopup] = useState(false);
   const [loadingIndex, setLoadingIndex] = useState(null);
   const [localQuestions, setLocalQuestions] = useState(questions);
-
+  
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setLocalQuestions(questions);
     if (onQuestionsUpdate) {

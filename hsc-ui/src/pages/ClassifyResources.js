@@ -4,23 +4,6 @@ import "../App.css";
 import { MathJaxContext, MathJax } from "better-react-mathjax";
 import DropdownMenu from "../components/DropDown";
 
-const topicList = [
-  "MA-C1: Introduction to Differentiation",
-  "MA-C2: Differential Calculus",
-  "MA-C3: Applications of Differentiation",
-  "MA-C4: Integral Calculus",
-  "MA-E1: Logarithms and Exponentials",
-  "MA-F1: Working with functions",
-  "MA-F2: Graphing Techniques",
-  "MA-S1: Probability and Discrete Probability Distributions",
-  "MA-S2: Descriptive Statistics and Bivariate Data Analysis",
-  "MA-S3: Random Variables",
-  "MA-T1: Trigonometry and Measure of Angles",
-  "MA-T2: Trigonometric Functions and Identities",
-  "MA-T3: Trigonometric Functions and Graphs",
-  "MA-M1: Modelling Financial Situations",
-];
-
 
 const topics_data = [
     // ---------------- Mathematics Advanced ----------------
@@ -187,7 +170,6 @@ function ClassifyResources() {
   const [images, setImages] = useState([]);
   const [correctedTopics, setCorrectedTopics] = useState({});
   const [submitting, setSubmitting] = useState(false); // ⬅️ NEW
-  const [revampQuestion, setRevampQuestion] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [subject, setSubject] = useState("Mathematics Advanced");
 
@@ -363,13 +345,6 @@ function ClassifyResources() {
                 {submitting ? "Submitting..." : "Confirm"}
               </button>
             </div>
-          )}
-
-          {showPopup && (
-            <RevampPopup
-              questionLatex={revampQuestion}
-              onClose={() => setShowPopup(false)}
-            />
           )}
         </div>
       </div>

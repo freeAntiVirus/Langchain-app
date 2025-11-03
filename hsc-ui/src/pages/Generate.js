@@ -1,18 +1,10 @@
-import DropdownCheckbox from "../components/DropDownCheckBox";
-import DropdownMenu from "../components/DropDown";
+
 import { GenerateButton } from "../components/Buttons";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import LatexView from "../components/LatexView";
 import SubjectTopicPicker from "../components/SubjectTopicPicker"; // ⬅️ new
 
-
-const SUBJECTS = [
-  "Mathematics Advanced",
-  "Mathematics Standard",
-  "Biology",
-  // "Mathematics Extension 1", // add more when ready
-];
 
 function Generate() {
   const [selectedTopics, setSelectedTopics] = useState([]);
