@@ -14,7 +14,6 @@ faiss-cpu
 pymongo
 pytess
 pytesseract
-tesseract
 typing
 pdf2image
 pathlib 
