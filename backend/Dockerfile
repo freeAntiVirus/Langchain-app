@@ -1,23 +1,26 @@
-FROM node:20-slim AS build
+# Use a lightweight base
+FROM python:3.10-slim
 
-# Install system dependencies needed by Tectonic
+# Install system dependencies for Tesseract
 RUN apt-get update && \
-    apt-get install -y curl tar && \
+    apt-get install -y tesseract-ocr tectonic poppler-utils libgl1 libglib2.0-0 libtesseract-dev libleptonica-dev pkg-config && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Download & install Tectonic binary
-RUN curl -fsSL https://drop-sh.fullyjustified.net | sh && \
-    mv tectonic /usr/local/bin/tectonic && \
-    chmod +x /usr/local/bin/tectonic
+# Optional: install language packs (uncomment if needed)
+# RUN apt-get install -y tesseract-ocr-eng tesseract-ocr-osd
 
+# Create working directory
 WORKDIR /app
-COPY package*.json ./
-RUN npm install --legacy-peer-deps
-COPY . .
-RUN npm run build
 
-FROM nginx:alpine
-COPY --from=build /app/build /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# Copy requirements and install Python deps
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy your backend code
+COPY . .
+
+# Expose your FastAPI port
+EXPOSE 8000
+
+# Run FastAPI app
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
