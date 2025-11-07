@@ -3,7 +3,7 @@ FROM python:3.10-slim
 
 # Install system dependencies for Tesseract
 RUN apt-get update && \
-    apt-get install -y tesseract-ocr libtesseract-dev libleptonica-dev pkg-config && \
+    apt-get install -y tesseract-ocr poppler-utils libtesseract-dev libleptonica-dev pkg-config && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Optional: install language packs (uncomment if needed)
