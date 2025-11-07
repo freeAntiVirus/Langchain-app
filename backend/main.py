@@ -370,7 +370,7 @@ async def classify(file: UploadFile = File(...),  subject: str = Form(...)):
                 continue  #  Skip GPT and go to next image
             
             retriever = vs.as_retriever(search_kwargs={"k": 150})
-            retrieved_docs = retriever.get_relevant_documents(img["text"])
+            retrieved_docs = retriever.invoke(img["text"])
             
 
             # DEBUG: Printing out the questions ai found semantically similar
