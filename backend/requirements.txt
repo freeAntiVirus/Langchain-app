@@ -1,10 +1,10 @@
 pdfplumber
 python-dotenv
 openai
-langchain-openai
-langchain
-langchain-core
-langchain-community
+langchain-openai==0.3.28
+langchain==0.3.27
+langchain-core==0.3.72
+langchain-community==0.3.27
 fastapi
 fastapi.responses
 uvicorn
