@@ -8,13 +8,14 @@ FROM python:3.10-slim
 COPY --from=tectonic-stage /usr/bin/tectonic /usr/local/bin/tectonic
 
 # Install other system dependencies
-RUN apt-get update && \
-    apt-get install -y \
-        tesseract-ocr poppler-utils libgl1 libglib2.0-0 \
-        libtesseract-dev libleptonica-dev pkg-config \
-        libharfbuzz-icu0 libharfbuzz-dev libicu-dev libgraphite2-dev libssl-dev zlib1g-dev && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-WORKDIR /app
+RUN apt-get update && apt-get install -y \
+    curl tar xz-utils tesseract-ocr poppler-utils \
+    libgl1 libglib2.0-0 libtesseract-dev libleptonica-dev pkg-config \
+    libicu-dev libharfbuzz-dev libgraphite2-dev libssl-dev zlib1g-dev && \
+    curl -L https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic@0.14.1/tectonic-0.14.1-x86_64-linux.tar.gz -o tectonic.tar.gz && \
+    tar -xzf tectonic.tar.gz && \
+    mv tectonic /usr/local/bin/tectonic && chmod +x /usr/local/bin/tectonic && \
+    rm tectonic.tar.gz && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
