@@ -1,6 +1,11 @@
 # ---------- Stage 1: Build ----------
 FROM node:20-slim AS build
 
+# Install tectonic and required system dependencies
+RUN apt-get update && \
+    apt-get install -y tectonic && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+    
 # Set working directory
 WORKDIR /app
 

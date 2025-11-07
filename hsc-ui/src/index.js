@@ -4,8 +4,8 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import 'katex/dist/katex.min.css';
-// export const API_URL = "https://langchain-app-2.onrender.com"
-export const API_URL = "http://localhost:8000"
+export const API_URL = "https://langchain-app-2.onrender.com"
+// export const API_URL = "http://localhost:8000"
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
