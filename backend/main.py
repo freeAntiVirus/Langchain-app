@@ -33,10 +33,7 @@ import os
 
 # Find absolute path to the binary inside backend/bin
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-TESSERACT_PATH = os.path.join(BASE_DIR, "bin", "tesseract-5.5.1")
-
-# Tell pytesseract to use it
-pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
+pytesseract.pytesseract.tesseract_cmd = os.path.join(os.getcwd(), "bin", "tesseract-5.5.1")
 
 load_dotenv()
 app = FastAPI()
