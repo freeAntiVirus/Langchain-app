@@ -1,5 +1,5 @@
 # ---------- Stage 1: copy tectonic binary from prebuilt image ----------
-FROM dxjoke/tectonic-docker:0.14.1-alpine-biber AS tectonic-stage
+FROM rekka/tectonic AS tectonic-stage
 
 # ---------- Stage 2: regular Python backend ----------
 FROM python:3.10-slim
