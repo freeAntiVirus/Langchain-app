@@ -7,6 +7,19 @@ from langchain_openai import ChatOpenAI
 import pytesseract
 import ast
 import random
+import os
+
+
+# Find absolute path to the binary inside backend/bin
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TESSERACT_PATH = os.path.join(BASE_DIR, "bin", "tesseract-5.5.1")
+
+# Tell pytesseract to use it
+pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
+
+# Optional: if you have local tessdata
+os.environ["TESSDATA_PREFIX"] = os.path.join(BASE_DIR, "bin")
+
 
 def generate_unique_question_id(existing_ids, max_tries=10):
     for _ in range(max_tries):

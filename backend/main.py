@@ -30,6 +30,14 @@ from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 import os
 
+
+# Find absolute path to the binary inside backend/bin
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TESSERACT_PATH = os.path.join(BASE_DIR, "bin", "tesseract-5.5.1")
+
+# Tell pytesseract to use it
+pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
+
 load_dotenv()
 app = FastAPI()
 last_classified_images = []
