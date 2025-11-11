@@ -133,10 +133,13 @@ function ClassifyResources() {
   const [correctedTopics, setCorrectedTopics] = useState({});
   const [submitting, setSubmitting] = useState(false); // ⬅️ NEW
   const [subject, setSubject] = useState("Mathematics Advanced");
+  const [loading, setLoading] = useState(false); // 👈 NEW
+
 
     const [isOpen, setIsOpen] = useState(false);
   const uploadFile = async () => {
     if (!file) return;
+    setLoading(true);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -152,6 +155,8 @@ function ClassifyResources() {
     } catch (err) {
       alert("Failed to classify.");
       console.error(err);
+    } finally {
+      setLoading(false); // 👈 stop loading
     }
   };
 
@@ -212,13 +217,41 @@ function ClassifyResources() {
           className="border rounded px-3 py-2"
         />
 
-        <button
-          onClick={uploadFile}
-          disabled={!file}
-          className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
-        >
-          Upload & Classify
-        </button>
+      <button
+        onClick={uploadFile}
+        disabled={!file || loading}
+        className={`bg-blue-600 text-white px-4 py-2 rounded 
+                    ${loading ? "opacity-70 cursor-not-allowed" : "hover:bg-blue-700"}`}
+      >
+        {loading ? (
+          <div className="flex items-center gap-2">
+            <svg
+              className="h-5 w-5 animate-spin"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+                opacity="0.25"
+              />
+              <path
+                d="M22 12a10 10 0 0 1-10 10"
+                stroke="currentColor"
+                strokeWidth="4"
+                strokeLinecap="round"
+                opacity="0.75"
+              />
+            </svg>
+            Classifying...
+          </div>
+        ) : (
+          "Upload & Classify"
+        )}
+      </button>
       </div>
 
       {isOpen && (

@@ -75,7 +75,7 @@ topics_data = [
 
     # ---------------- Biology (Year 11) ----------------
     { "TopicId": "BIO-M1.1", "name": "BIO-M1.1: Cell Structure (Year 11)", "subject": "Biology" },
-    { "TopicId": "BIO-M1.1", "name": "BIO-M1.2: Cell Function (Year 11)", "subject": "Biology" },
+    { "TopicId": "BIO-M1.2", "name": "BIO-M1.2: Cell Function (Year 11)", "subject": "Biology" },
 
     { "TopicId": "BIO-M2.1", "name": "BIO-M2.1: Organisation of Cells (Year 11)", "subject": "Biology" },
     { "TopicId": "BIO-M2.2", "name": "BIO-M2.1: Nutrient and Gas Requirements (Year 11)", "subject": "Biology" },
