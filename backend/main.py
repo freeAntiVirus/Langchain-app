@@ -57,15 +57,15 @@ VECTORSTORE_PATHS = {
     "Biology": VECTORSTORE_ROOT / "biology",
 }
 
-# SOLUTIONS_VECTORSTORE_ROOT = Path("solutions")
+SOLUTIONS_VECTORSTORE_ROOT = Path("solutions")
 
-# SOLUTIONS_VECTORSTORE_PATHS = {
-#     "Mathematics Advanced": SOLUTIONS_VECTORSTORE_ROOT / "advanced",
-#     "Mathematics Standard": SOLUTIONS_VECTORSTORE_ROOT / "standard",
-#     "Biology": SOLUTIONS_VECTORSTORE_ROOT / "biology",
-# }
+SOLUTIONS_VECTORSTORE_PATHS = {
+    "Mathematics Advanced": SOLUTIONS_VECTORSTORE_ROOT / "advanced",
+    # "Mathematics Standard": SOLUTIONS_VECTORSTORE_ROOT / "standard",
+    # "Biology": SOLUTIONS_VECTORSTORE_ROOT / "biology",
+}
 
-# SOLUTIONS_VECTORSTORE_ROOT.mkdir(parents=True, exist_ok=True)
+SOLUTIONS_VECTORSTORE_ROOT.mkdir(parents=True, exist_ok=True)
 
 VECTORSTORE_ROOT.mkdir(parents=True, exist_ok=True)
 
@@ -79,48 +79,48 @@ def _faiss_exists(folder: Path) -> bool:
     return (folder / "index.faiss").exists() and (folder / "index.pkl").exists()
 
 # SOLUTION VECTOR STORE
-# def build_solution_vectorstore(subject):
+def build_solution_vectorstore(subject):
 
-#     path = SOLUTIONS_VECTORSTORE_PATHS[subject]
+    path = SOLUTIONS_VECTORSTORE_PATHS[subject]
 
-#     with open("solutions_output.json", "r") as f:
-#         solutions = json.load(f)
+    with open("solution/solutions_output.json", "r") as f:
+        solutions = json.load(f)
 
-#     docs = []
+    docs = []
 
-#     for sol in solutions:
+    for sol in solutions:
 
-#         content = f"""
-# Sample Answer:
-# {sol.get("SampleAnswer","")}
+        content = f"""
+Sample Answer:
+{sol.get("SampleAnswer","")}
 
-# Criteria:
-# {sol.get("Criteria","")}
+Criteria:
+{sol.get("Criteria","")}
 
-# Diagram:
-# {sol.get("DiagramDescription","")}
-# """
+Diagram:
+{sol.get("DiagramDescription","")}
+"""
 
-#         doc = Document(
-#             page_content=content,
-#             metadata={
-#                 "question_id": sol["QuestionId"],
-#                 "solution_id": sol["SolutionId"],
-#                 "criteria": sol.get("Criteria",""),
-#                 "diagram": sol.get("DiagramDescription","")
-#             }
-#         )
+        doc = Document(
+            page_content=content,
+            metadata={
+                "question_id": sol["QuestionId"],
+                "solution_id": sol["SolutionId"],
+                "criteria": sol.get("Criteria",""),
+                "diagram": sol.get("DiagramDescription","")
+            }
+        )
 
-#         docs.append(doc)
+        docs.append(doc)
 
-#     print(f"Building solutions FAISS for {subject} with {len(docs)} solutions...")
+    print(f"Building solutions FAISS for {subject} with {len(docs)} solutions...")
 
-#     vs = FAISS.from_documents(docs, embeddings)
+    vs = FAISS.from_documents(docs, embeddings)
 
-#     path.mkdir(parents=True, exist_ok=True)
-#     vs.save_local(str(path))
+    path.mkdir(parents=True, exist_ok=True)
+    vs.save_local(str(path))
 
-#     return vs
+    return vs
 
 # Try to load all three first
 all_exist = all(_faiss_exists(p) for p in VECTORSTORE_PATHS.values())
@@ -237,24 +237,24 @@ else:
             vs.save_local(str(path))
             vectorstores[subj] = vs
 
-# solution_vectorstores = {}
+solution_vectorstores = {}
 
-# for subj in SOLUTIONS_VECTORSTORE_PATHS:
-#     path = SOLUTIONS_VECTORSTORE_PATHS[subj]
+for subj in SOLUTIONS_VECTORSTORE_PATHS:
+    path = SOLUTIONS_VECTORSTORE_PATHS[subj]
 
-#     if (path / "index.faiss").exists():
+    if (path / "index.faiss").exists():
 
-#         solution_vectorstores[subj] = FAISS.load_local(
-#             str(path),
-#             embeddings,
-#             allow_dangerous_deserialization=True,
-#         )
+        solution_vectorstores[subj] = FAISS.load_local(
+            str(path),
+            embeddings,
+            allow_dangerous_deserialization=True,
+        )
 
-#         print(f"Loaded solution vectorstore for {subj}")
+        print(f"Loaded solution vectorstore for {subj}")
 
-#     else:
+    else:
 
-#         solution_vectorstores[subj] = build_solution_vectorstore(subj)
+        solution_vectorstores[subj] = build_solution_vectorstore(subj)
 
 client = OpenAI()
 
@@ -1200,6 +1200,27 @@ if __name__ == "__main__":
             print(f"  Question ID: {doc.metadata.get('question_id')}")
             print(f"  Topics: {doc.metadata.get('topics')}")
             print(f"  Preview: {doc.page_content[:100]}...")  # first 100 chars
+
+            if i >= 4:  # stop after 5 docs
+                break
+    
+    # Get the Mathematics Advanced solutions vectorstore
+    solutions_vs = solution_vectorstores.get("Mathematics Advanced")
+
+    if solutions_vs is None:
+        print("No solutions vectorstore found for Mathematics Advanced")
+    else:
+        print("Mathematics Advanced Solutions Vectorstore:")
+        print(f"Number of documents: {len(solutions_vs.docstore._dict)}")
+
+        # Print a few sample documents
+        for i, (doc_id, doc) in enumerate(solutions_vs.docstore._dict.items()):
+            print(f"\nSolution Doc {i+1} (Internal ID={doc_id}):")
+            print(f"  Question ID: {doc.metadata.get('question_id')}")
+            print(f"  Solution ID: {doc.metadata.get('solution_id')}")
+            print(f"  Criteria: {doc.metadata.get('criteria')}")
+            print(f"  Diagram Description: {doc.metadata.get('diagram')}")
+            print(f"\n  Content Preview:\n{doc.page_content[:300]}...")
 
             if i >= 4:  # stop after 5 docs
                 break
