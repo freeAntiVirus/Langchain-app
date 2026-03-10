@@ -57,6 +57,16 @@ VECTORSTORE_PATHS = {
     "Biology": VECTORSTORE_ROOT / "biology",
 }
 
+# SOLUTIONS_VECTORSTORE_ROOT = Path("solutions")
+
+# SOLUTIONS_VECTORSTORE_PATHS = {
+#     "Mathematics Advanced": SOLUTIONS_VECTORSTORE_ROOT / "advanced",
+#     "Mathematics Standard": SOLUTIONS_VECTORSTORE_ROOT / "standard",
+#     "Biology": SOLUTIONS_VECTORSTORE_ROOT / "biology",
+# }
+
+# SOLUTIONS_VECTORSTORE_ROOT.mkdir(parents=True, exist_ok=True)
+
 VECTORSTORE_ROOT.mkdir(parents=True, exist_ok=True)
 
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
@@ -67,6 +77,50 @@ def _faiss_exists(folder: Path) -> bool:
     # FAISS saves multiple files; presence of index.faiss + index.pkl is typical.
     # If you want to be stricter, check for both.
     return (folder / "index.faiss").exists() and (folder / "index.pkl").exists()
+
+# SOLUTION VECTOR STORE
+# def build_solution_vectorstore(subject):
+
+#     path = SOLUTIONS_VECTORSTORE_PATHS[subject]
+
+#     with open("solutions_output.json", "r") as f:
+#         solutions = json.load(f)
+
+#     docs = []
+
+#     for sol in solutions:
+
+#         content = f"""
+# Sample Answer:
+# {sol.get("SampleAnswer","")}
+
+# Criteria:
+# {sol.get("Criteria","")}
+
+# Diagram:
+# {sol.get("DiagramDescription","")}
+# """
+
+#         doc = Document(
+#             page_content=content,
+#             metadata={
+#                 "question_id": sol["QuestionId"],
+#                 "solution_id": sol["SolutionId"],
+#                 "criteria": sol.get("Criteria",""),
+#                 "diagram": sol.get("DiagramDescription","")
+#             }
+#         )
+
+#         docs.append(doc)
+
+#     print(f"Building solutions FAISS for {subject} with {len(docs)} solutions...")
+
+#     vs = FAISS.from_documents(docs, embeddings)
+
+#     path.mkdir(parents=True, exist_ok=True)
+#     vs.save_local(str(path))
+
+#     return vs
 
 # Try to load all three first
 all_exist = all(_faiss_exists(p) for p in VECTORSTORE_PATHS.values())
@@ -182,6 +236,25 @@ else:
             path.mkdir(parents=True, exist_ok=True)
             vs.save_local(str(path))
             vectorstores[subj] = vs
+
+# solution_vectorstores = {}
+
+# for subj in SOLUTIONS_VECTORSTORE_PATHS:
+#     path = SOLUTIONS_VECTORSTORE_PATHS[subj]
+
+#     if (path / "index.faiss").exists():
+
+#         solution_vectorstores[subj] = FAISS.load_local(
+#             str(path),
+#             embeddings,
+#             allow_dangerous_deserialization=True,
+#         )
+
+#         print(f"Loaded solution vectorstore for {subj}")
+
+#     else:
+
+#         solution_vectorstores[subj] = build_solution_vectorstore(subj)
 
 client = OpenAI()
 
