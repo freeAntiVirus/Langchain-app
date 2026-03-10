@@ -1,0 +1,128 @@
+[
+  {
+    "QuestionId": "985725",
+    "SolutionId": "20260310155706733160_7448",
+    "SampleAnswer": "Since there is little difference between the mean numbers of young/eggs produced in animals using the two modes of reproduction, and the variability of the data is large as shown by the standard deviations, the students could conclude that there is no difference between the number of young produced and the mode of fertilisation.",
+    "Criteria": "\u2022 Draws an appropriate conclusion from the data\n\u2022 Uses the data to provide justification for the validity of the conclusion\n\n\u2022 Draws a relevant conclusion\n\u2022 Uses the data to provide a reason for the conclusion\n\n\u2022 Provides some relevant information about the data",
+    "DiagramDescription": ""
+  },
+  {
+    "QuestionId": "308176",
+    "SolutionId": "20260310155713306900_9303",
+    "SampleAnswer": "A gene pool is the total genetic diversity of a population -- it results in variation of phenotypes and provides the basis for natural selection. When the gene pool of a population changes evolution has occurred. Gene pools may change as a result of mutation, gene flow and genetic drift. Gene flow is the movement of alleles into or out of a population. For example a migrant animal may add new alleles when it reproduces with individuals in the population. Genetic drift is a change in allele frequency as a result of random selection of alleles. This is especially marked in a small, remnant population. The few remaining individuals that survive carry a small sample of the alleles in the original population.",
+    "Criteria": "\u2022 Demonstrates a thorough understanding of TWO mechanisms by which gene pools change\n\u2022 Relates changes in the gene pool to evolution\n\n5 marks\n\n\u2022 Links changes in the gene pool to evolution\nAND\n\u2022 Demonstrates a thorough understanding of ONE mechanism by which gene pools change\nOR\n\u2022 Demonstrates some understanding of TWO mechanisms by which gene pools change\n\n3\u20134 marks\n\n\u2022 Outlines ways in which gene pools can change\nOR\n\u2022 Links changes in gene pools to evolution\n\n2 marks\n\n\u2022 Provides some relevant information\n\n1 mark",
+    "DiagramDescription": ""
+  },
+  {
+    "QuestionId": "259969",
+    "SolutionId": "20260310155725341627_5980",
+    "SampleAnswer": "(a) The plasma levels measured in the first 60 minutes represent resting levels. After the meal, plasma glucose rises as a direct result of absorption of glucose from the gut into the bloodstream. \n\nRising blood glucose stimulates \\( \\beta \\) cells in the pancreas to release the hormone insulin, which stimulates body cells to take up glucose to be used in their metabolism and the liver to take up glucose to be stored as glycogen. Therefore, the rise in insulin in Figure 2 is a direct result of the rise in plasma glucose. As the cells and liver take up glucose, they remove the glucose from the blood leading to the subsequent fall in plasma glucose levels. The falling glucose removes the stimulation of \\( \\beta \\) cells and by this negative feedback mechanism, insulin levels also fall. \n\nGlucagon is a hormone that is an important part of the negative feedback loop that controls glucose levels in the blood. If plasma glucose falls to low levels, glucagon is released from alpha cells in the pancreas and causes glucose to be released into the blood from glycogen stores in the liver and muscles to restore normal glucose levels. In Figure 1, as glucose rises the alpha cells will produce less glucagon and falling glucagon levels can be seen in Figure 3. This will result in less glucose being released from the liver, reducing glucose levels.",
+    "Criteria": "Explains all the graphs with respect to the negative feedback control of blood glucose in healthy humans. Makes clear references to features of the graphs. Shows detailed understanding of control of blood glucose.",
+    "DiagramDescription": ""
+  },
+  {
+    "QuestionId": "259969",
+    "SolutionId": "20260310155729520500_4094",
+    "SampleAnswer": "(b) Temperature changes are detected by the hypothalamus in the brain but changes in glucose are detected by the pancreas. The response to changes in temperature is via the nervous system but glucose is regulated via hormones.",
+    "Criteria": "\u2022 Outlines differences between control of blood glucose and body temperature - 3 Marks\n\u2022 Outlines a difference between control of blood glucose and body temperature OR Identifies two differences - 2 Marks\n\u2022 Provides some relevant information - 1 Mark",
+    "DiagramDescription": ""
+  },
+  {
+    "QuestionId": "404149",
+    "SolutionId": "20260310155735912368_2798",
+    "SampleAnswer": "The paired homologous chromosomes are incorrectly drawn. In a pair of chromosomes, one is paternal and the other is maternal. Prior to crossing over, each chromosome duplicates itself forming two chromatids and they should be identical, that is both chromatids should be either maternal or paternal and not different as shown in the model.\n\nIn meiosis, homologous chromosomes are lined up in Metaphase I in random order and orientation (independently assorted). They separate in Meiosis I, resulting in different combinations of parental chromosomes in the gametes. Crossing over is the exchange of genetic material between the chromatids of homologous chromosomes during Meiosis I. This leads to a new combination of alleles on each chromatid.",
+    "Criteria": "Question 28 (a)\n- Explains the misunderstanding of meiosis shown in the model: 3 marks\n- Describes in general terms the misunderstanding shown in the model: 2 marks\n- Provides some relevant information: 1 mark\n\nQuestion 28 (b)\n- Explains processes in meiosis that lead to genetic variation: 3 marks\n- Explains a process in meiosis that leads to genetic variation OR Identifies processes in meiosis that lead to genetic variation: 2 marks\n- Provides some relevant information: 1 mark",
+    "DiagramDescription": ""
+  },
+  {
+    "QuestionId": "210822",
+    "SolutionId": "20260310155737560930_2585",
+    "SampleAnswer": "Chromosomal mutations involve changes to the number of chromosomes in the genome.",
+    "Criteria": "\u2022 Outlines a type of mutation other than point mutation\n\u2022 Identifies another type of mutation",
+    "DiagramDescription": ""
+  },
+  {
+    "QuestionId": "555082",
+    "SolutionId": "20260310155740764781_2831",
+    "SampleAnswer": "Antibiotics can be used to treat bacterial infections as they can inhibit bacterial growth. Antibiotic resistance in bacteria is becoming increasingly common and is reducing the effectiveness of many antibiotics.",
+    "Criteria": "\u2022 Outlines a benefit and a limitation of the use of pharmaceuticals to treat infectious disease: 3 Marks\n\u2022 Identifies a relevant benefit and limitation OR Outlines a benefit or limitation of the use of pharmaceuticals to treat infectious disease: 2 Marks\n\u2022 Provides some relevant information: 1 Mark",
+    "DiagramDescription": ""
+  },
+  {
+    "QuestionId": "778801",
+    "SolutionId": "20260310155744409037_9907",
+    "SampleAnswer": "(a) The inheritance of yellow colour is recessive since both parents are orange but have yellow offspring. The yellow allele must be present in both parents but it is not expressed.",
+    "Criteria": " \u2022 Uses the pedigree chart to explain that the yellow allele is recessive (2 marks) \u2022 Provides some relevant information (1 mark)",
+    "DiagramDescription": ""
+  },
+  {
+    "QuestionId": "778801",
+    "SolutionId": "20260310155753349589_7725",
+    "SampleAnswer": "(b) If the inheritance is sex linked, then I and II would be X^AY and X^a respectively. A cross between I and II would result in all male offspring being yellow and all female offspring being orange.\\\\\nIf the inheritance is not sex linked then II would have the genotype aa, whereas I would either have the genotype, AA or Aa. If I was AA then all of the offspring would be orange. But if I was Aa, then 50\\% of the offspring would be yellow while the other 50\\% would be orange and the colours would be equally distributed between male and female offspring.\\\\\nTherefore, the absence of an orange, male fish as a result of the cross between I and II would confirm that the inheritance of colour in the fish is sex linked.",
+    "Criteria": "\u2022 Explains the possible outcomes of a cross between I and II\n\u2022 Relates differences in the outcomes of the cross to justify the type of inheritance\n\u2022 Communicates information succinctly using appropriate scientific terms and formats\\n\u2022 Explains some outcomes of the cross between I and II including sex-linked inheritance\n\u2022 Communicates information logically using appropriate scientific terms and formats\\n\u2022 Describes an outcome of the cross between I and II through either sex-linked inheritance OR Mendelian genetics\n\u2022 Provides any information relevant to the inheritance of colour in the fish",
+    "DiagramDescription": ""
+  },
+  {
+    "QuestionId": "634613",
+    "SolutionId": "20260310155757397912_1890",
+    "SampleAnswer": "Washing hands after going to the toilet removes bacteria from the skin. The purification of drinking water will kill the bacteria present in the water. Proper disposal of sewage would stop the exposure of people to the bacteria.",
+    "Criteria": "\u2022 Outlines THREE strategies that could help prevent the spread of cholera: 3 marks.\n\u2022 Identifies THREE strategies that could help prevent the spread of disease OR Outlines TWO strategies that could help prevent the spread of cholera: 2 marks.\n\u2022 Provides some relevant information: 1 mark.",
+    "DiagramDescription": ""
+  },
+  {
+    "QuestionId": "490137",
+    "SolutionId": "20260310155810597159_1857",
+    "SampleAnswer": "(a) \\begin{tikzpicture} \\begin{axis}[ xlabel={Year}, ylabel={GFR (mL min$^{-1}$)}, xmin=2010, xmax=2030, ymin=0, ymax=100, grid=both, major grid style={line width=.2pt,draw=gray!50}, minor grid style={line width=.1pt,draw=gray!20} ] \\addplot[only marks] coordinates {(2010, 80) (2011, 80) (2012, 80) (2013, 80) (2014, 80) (2015, 80) (2016, 80) (2017, 70) (2018, 60) (2019, 50) (2020, 40)}; \\end{axis} \\end{tikzpicture}",
+    "Criteria": "Completes appropriate graph of data (2 marks). Provides some relevant information (1 mark).",
+    "DiagramDescription": "A line graph plotted on a Cartesian plane. The x-axis is labeled 'Year' ranging from 2010 to 2030, while the y-axis is labeled 'GFR (mL min$^{-1}$)' ranging from 0 to 100. Data points are marked with dots at years 2010 to 2020, with GFR values starting at 80 for 2010 to 2016, then dropping to 70 in 2017, 60 in 2018, 50 in 2019, and 40 in 2020. The graph has a grid with both major and minor lines."
+  },
+  {
+    "QuestionId": "490137",
+    "SolutionId": "20260310155826936270_7957",
+    "SampleAnswer": "(b) GFR (\\text{mL min}^{-1}) \\ \n100 \\ \n90 \\ \n80 \\ \n70 \\ \n60 \\ \n50 \\ \n40 \\ \n30 \\ \n20 \\ \n10 \\ \n0 \\ \n2010 \\ 2012 \\ 2014 \\ 2016 \\ 2018 \\ 2020 \\ 2022 \\ 2024 \\ 2026 \\ 2028 \\ 2030 \\ \n \\text{Year}",
+    "Criteria": "\u2022 Uses a suitable line of best fit to show the year dialysis is likely to be required\n\u2022 Attempts to use the graph to show the year dialysis is likely to be required",
+    "DiagramDescription": "The diagram is a graph plotting GFR (mL min^{-1}) against the Year from 2010 to 2030. The GFR data points are marked with black dots from 2010 to 2020, showing a decreasing trend. A dotted curve line represents the line of best fit, showing a gradual decline towards the year 2020, dipping towards zero. Another horizontal dotted line is at approximately 15 mL min^{-1} indicating a threshold. Vertical and horizontal lines extend from the year 2020 down to this threshold line, likely predicting when dialysis would be required."
+  },
+  {
+    "QuestionId": "490137",
+    "SolutionId": "20260310155834453306_9015",
+    "SampleAnswer": "(c) Loss of kidney function may result in a failure to remove urea from blood. In dialysis, blood from the patient passes through selectively permeable dialysis tubing. Because the urea diffuses from the high concentrations in the blood to the low concentrations in the dialysate, the urea is removed from the blood.",
+    "Criteria": "Describes a process occurring in dialysis. Relates how the identified process compensates for loss of a function of the kidneys. Outlines process(es) in dialysis. Relates a process to loss of a function of the kidneys. Provides some relevant information.",
+    "DiagramDescription": ""
+  },
+  {
+    "QuestionId": "465641",
+    "SolutionId": "20260310155840856677_4587",
+    "SampleAnswer": "Non-infectious diseases such as diabetes and cystic fibrosis are not caused by pathogens. In type 1 diabetes the pancreas no longer produces insulin. Recombinant DNA technology has produced bacteria that have a human insulin gene inserted and then produce insulin. The insulin can then be used to treat diabetic patients and keep them alive. Replacing faulty genes in inherited diseases such as cystic fibrosis would be able to cure such conditions. It is possible to deliver a replacement gene to the lung cells via recombinant viruses. However, when lung cells are replaced the new cells (formed from stem cells) do not have the healthy version of the gene. Infectious diseases are caused by pathogens. Crops such as corn are affected by the European corn borer. Recombinant Bt corn is produced by taking a gene from \\textit{Bacillus thuringiensis}. The gene codes for a protein that is toxic to the European corn borer, thus reducing disease in corn crops.",
+    "Criteria": "Outlines two relevant genetic technologies\\nDemonstrates a thorough understanding of infectious and non-infectious diseases\\nRelates the impact of specific genetic technologies to the management of both types of diseases",
+    "DiagramDescription": ""
+  },
+  {
+    "QuestionId": "629828",
+    "SolutionId": "20260310155848826819_9715",
+    "SampleAnswer": "Factors which contribute to the validity of the study could include: \\begin{itemize} \\item Age \\item Sex \\item Arsenic exposure \\item Large sample size \\item Socioeconomic status \\end{itemize} Survival is highest in those exposed to less than 90 \\mu g \\ L^{-1} arsenic in both males and females. This group serves as a control showing that most young people in the study survived over the 11-year period. The level of arsenic to which they were exposed is higher than recommended by WHO but survival was high nevertheless. In both males and females, increasing doses of arsenic led to decreased survival, which suggests that arsenic is causing the decline in survival. The increasing response to increasing doses was best seen in the males. In females, all doses over 90 \\mu g \\ L^{-1} led to a similar survival decrease which suggests there may be other factors that interact with the dose of arsenic to produce this result. Other factors could include nutritional state or genes. Survival declined progressively over the 11 years, which supports the idea that as arsenic exposure increases over the years, survival declines. However, although the numbers in the study were large, survival only dropped by 0.1\\% or less.",
+    "Criteria": "Identifies TWO features that contribute to the validity of the study 2\\nIdentifies ONE feature that contributes to the validity of this study 1\\nProvides points for and/or against the hypothesis Relates points made to the data 4\\nProvides a point for or against the hypothesis Relates point to the data 3\\nDescribes trends 2\\nProvides some relevant information 1",
+    "DiagramDescription": ""
+  },
+  {
+    "QuestionId": "861094",
+    "SolutionId": "20260310155853269886_7369",
+    "SampleAnswer": "(a) The virus is able to travel via the nervous system to the salivary glands. This can result in direct contact transmission when the infected host bites another animal.",
+    "Criteria": "Identifies features that facilitate the transmission of rabies between hosts (2 marks). Provides some relevant information (1 mark).",
+    "DiagramDescription": ""
+  },
+  {
+    "QuestionId": "861094",
+    "SolutionId": "20260310155922781320_2677",
+    "SampleAnswer": "(b) The rabies virus has a small genome composed of single-stranded RNA but the genome of cellular pathogens such as bacteria is much larger and is in the form of DNA which enables complex cellular processes without a host. The viral RNA polymerase, which is made up of the L and P proteins, is responsible for the production of viral proteins and viral RNA, which are the components of new rabies viral particles. RNA polymerase is responsible for transcription of the viral RNA into complementary mRNA strands, which are then translated into rabies viral proteins, G, M, N, P and L, by host cell ribosomes. The replication of rabies viral RNA is facilitated by the newly produced L and P proteins (RNA polymerase). In this process, a complementary strand of viral RNA is produced from the original viral RNA strand. This complementary strand is then used as a template for the RNA polymerase to catalyse the production of more viral RNA. The new strands produced are therefore the same as the original viral RNA. RNA polymerase is responsible for both the viral RNA and proteins needed in reproducing the virus.",
+    "Criteria": "Question 32 (b) (i): - Explains a feature that distinguishes the rabies virus from cellular pathogens (3 marks). - Outlines feature(s) that distinguish between viral and cellular pathogens (2 marks). - Provides some relevant information (1 mark). Question 32 (b) (ii): - Explains the role of RNA polymerase in reproduction of the rabies virus, including reference to transcription, production of proteins and viral RNA replication; Relates newly produced proteins to RNA polymerase and viral RNA replication (5 marks). - Describes the role of RNA polymerase in reproduction of the rabies virus, including reference to transcription, production of proteins and viral RNA replication; Relates newly produced proteins to RNA polymerase (4 marks). - Outlines the role of RNA polymerase in reproduction of the rabies virus including reference to the processes of transcription and RNA replication (3 marks). - Provides some features of the role of RNA polymerase in reproduction of the rabies virus (2 marks). - Provides some relevant information (1 mark).",
+    "DiagramDescription": ""
+  },
+  {
+    "QuestionId": "861094",
+    "SolutionId": "20260310155946668732_3065",
+    "SampleAnswer": "(c) Once the rabies virus has entered the wound it will use the patient\u2019s cells to replicate and the viral concentration increases (as seen in the first five days). Without PEP the virus will continue to replicate, migrate to the CNS (in the first graph this occurs by day 7), and eventually cause rabies and death. Initially the patient does not have memory cells for the virus and does not produce antibodies to it. The injection of HRIG provides the patient with human antibodies that are specific to the virus, providing passive immunity. The antibodies will combine with viral molecules and inactivate them and also facilitate their destruction by white cells such as phagocytes. The PEP graph shows these antibodies will only last for up to 21 days but have an important initial role in controlling viral numbers (the data shows a reduction in viral concentration by days 6\u20138). The antibodies help to prevent the virus progressing to the CNS. The rabies vaccine contains an inactivated, harmless version of the rabies virus and will result in the development of acquired, active immunity. This occurs when macrophages present the viral antigen to specific helper T cells that have surface receptors complementary to it. These helper T cells then stimulate specific B cells that have also been exposed to the antigen to undergo mitosis and cell differentiation. The daughter cells will either be plasma cells that produce antibodies or will be kept as memory B cells in case of future infection. The PEP graph shows that by day 7 the production of antibodies begins and increases sharply over the next few days. This coincides with the rapid decrease in viral concentration. The viral particles are being inactivated by the presence of antibodies in increasing concentration. By day 11 there are no viral particles left at the infection site and progression to the CNS and the disease has been avoided. Antibody concentration continues to increase as more rabies specific plasma cells are produced, with a maximum concentration being reached at 21 days after initial exposure and vaccination.",
+    "Criteria": "\u2022 Accurately interprets and uses the relevant data and information to explain how PEP prevents rabies developing after exposure to the virus\n\u2022 Demonstrates an extensive knowledge of vaccination, passive and active immunity\n\u2022 Explains the role of antibodies\n\u2022 Communicates scientific information succinctly and logically using precise scientific terminology\n\u2022 Interprets and uses the data to explain how PEP prevents rabies developing after exposure to the virus\n\u2022 Demonstrates a thorough knowledge of vaccination, passive and active immunity\n\u2022 Describes the role of antibodies\n\u2022 Communicates scientific information logically using correct terminology\n\u2022 Interprets and uses data provided to explain how PEP prevents rabies\n\u2022 Demonstrates a sound knowledge of vaccination and immunity\n\u2022 Outlines the role of antibodies\n\u2022 Communicates using scientific terms\n\u2022 Makes reference to information provided\n\u2022 Provides some information about the role of antibodies and/or vaccines in preventing rabies\n\u2022 Provides relevant information about immunity and/or rabies",
+    "DiagramDescription": ""
+  }
+]
