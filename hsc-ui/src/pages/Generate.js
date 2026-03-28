@@ -20,6 +20,11 @@ function Generate() {
   const [diagramTikz, setDiagramTikz] = useState(""); // fallback (render via tikzjax)
   const [subject, setSubject] = useState("Mathematics Advanced");
 
+  // solution 
+  const [solutionLoading, setSolutionLoading] = useState(false);
+  const [solutionError, setSolutionError] = useState("");
+  const [generatedSolution, setGeneratedSolution] = useState("");
+
   const handleGenerate = async () => {
     setLoading(true);
     setErrorMsg("");
@@ -91,6 +96,40 @@ function Generate() {
     }
   };
 
+  const handleGenerateSolution = async () => {
+    setSolutionLoading(true);
+    setSolutionError("");
+    setGeneratedSolution("");
+
+    if (!generatedLatex) {
+      setSolutionError("Generate a question first.");
+      setSolutionLoading(false);
+      return;
+    }
+
+    try {
+      // ⚠️ IMPORTANT: your backend expects IMAGE (base64)
+      // For now we send the latex as text image fallback (temporary hack)
+      console.log("hello")
+      console.log(API_URL);
+
+      const res = await axios.post(`${API_URL}/generate-solution`, {
+        question_text: generatedLatex,
+        subject: subject
+      });
+
+      setGeneratedSolution(res.data.generated_solution);
+
+    } catch (err) {
+      console.error("Solution generation failed:", err);
+      const msg =
+        err?.response?.data?.error ||
+        "Failed to generate solution.";
+      setSolutionError(msg);
+    } finally {
+      setSolutionLoading(false);
+    }
+  };
   // Re-render TikZ client-side whenever we get TikZ (fallback path)
   useEffect(() => {
     if (!diagramTikz) return;
@@ -152,6 +191,20 @@ function Generate() {
             </button>
             {diagramError && <p className="text-sm text-red-600">{diagramError}</p>}
           </div>
+          
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleGenerateSolution}
+              disabled={!generatedLatex || solutionLoading}
+              className="px-4 py-2 rounded-xl bg-green-600 text-white disabled:opacity-50"
+            >
+              {solutionLoading ? "Generating Solution…" : "Generate Solution"}
+            </button>
+
+            {solutionError && (
+              <p className="text-sm text-red-600">{solutionError}</p>
+            )}
+          </div>
 
           {/* Diagram Output */}
           <div className="rounded-2xl border p-4 min-h-[180px] flex items-center justify-center">
@@ -170,6 +223,19 @@ function Generate() {
             {/* Fallback: TikZ via tikzjax */}
             {diagramTikz && !diagramSVG && (
               <pre className="tikzjax text-sm overflow-auto text-center">{diagramTikz}</pre>
+            )}
+          </div>
+
+          <div className="rounded-2xl border p-4 min-h-[200px]">
+            {generatedSolution ? (
+              <>
+                <h3 className="font-semibold mb-2">Solution</h3>
+                <LatexView latex={generatedSolution} />
+              </>
+            ) : (
+              <p className="text-sm text-gray-500">
+                Your generated solution will appear here.
+              </p>
             )}
           </div>
         </div>

@@ -6,7 +6,7 @@ import LatexView from "../components/LatexView"; // ✅ import your LaTeX render
 import {API_URL} from "../index.js"
 const RevampPopup = ({ questionLatex, onClose }) => {
   const captureRef = useRef();
-
+ 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-2xl relative">
@@ -55,9 +55,13 @@ const ScrollableTextBox = ({ questions = [], onQuestionsUpdate, subject }) => {
   const [showPopup, setShowPopup] = useState(false);
   const [loadingIndex, setLoadingIndex] = useState(null);
   const [localQuestions, setLocalQuestions] = useState(questions);
+  const [solutions, setSolutions] = useState({});
+  const [solutionLoadingIndex, setSolutionLoadingIndex] = useState(null);
+
   
   useEffect(() => {
     setLocalQuestions(questions);
+    setSolutions({}); // ✅ reset solutions
     if (onQuestionsUpdate) {
       onQuestionsUpdate(questions);
     }
@@ -82,6 +86,28 @@ const ScrollableTextBox = ({ questions = [], onQuestionsUpdate, subject }) => {
       console.error(err);
     } finally {
       setLoadingIndex(null);
+    }
+  };
+
+  const fetchSolution = async (question, index) => {
+    try {
+      setSolutionLoadingIndex(index);
+
+      const res = await axios.post(`${API_URL}/generate-solution`, {
+        question_text: question.text, // ⚠️ IMPORTANT: use text, not base64
+        subject: subject
+      });
+
+      setSolutions(prev => ({
+        ...prev,
+        [index]: res.data.generated_solution
+      }));
+
+    } catch (err) {
+      console.error("Solution generation failed:", err);
+      alert("Failed to generate solution.");
+    } finally {
+      setSolutionLoadingIndex(null);
     }
   };
 
@@ -118,6 +144,13 @@ const ScrollableTextBox = ({ questions = [], onQuestionsUpdate, subject }) => {
 
               <div className="absolute top-2 right-2 flex gap-2">
                 <button
+                  onClick={() => fetchSolution(q, index)}
+                  className="bg-green-500 px-2 py-1 rounded text-sm text-white hover:bg-green-600"
+                  disabled={solutionLoadingIndex === index}
+                >
+                  {solutionLoadingIndex === index ? "Loading..." : "Solution"}
+                </button>
+                <button
                   onClick={() => fetchRevamp(q, index)}
                   className="bg-yellow-300 px-2 py-1 rounded text-sm hover:bg-yellow-400"
                   disabled={loadingIndex === index}
@@ -126,6 +159,12 @@ const ScrollableTextBox = ({ questions = [], onQuestionsUpdate, subject }) => {
                 </button>
                 <DeleteButton onClick={() => handleDelete(index)} />
               </div>
+              {solutions[index] && (
+                <div className="mt-4 p-3 bg-gray-50 border rounded">
+                  <h4 className="font-semibold mb-2">Solution</h4>
+                  <LatexView latex={solutions[index]} />
+                </div>
+              )}
             </div>
           ))
         )}

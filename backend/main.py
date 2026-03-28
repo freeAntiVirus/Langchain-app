@@ -62,7 +62,7 @@ SOLUTIONS_VECTORSTORE_ROOT = Path("solutions")
 SOLUTIONS_VECTORSTORE_PATHS = {
     "Mathematics Advanced": SOLUTIONS_VECTORSTORE_ROOT / "advanced",
     # "Mathematics Standard": SOLUTIONS_VECTORSTORE_ROOT / "standard",
-    # "Biology": SOLUTIONS_VECTORSTORE_ROOT / "biology",
+    "Biology": SOLUTIONS_VECTORSTORE_ROOT / "biology",
 }
 
 SOLUTIONS_VECTORSTORE_ROOT.mkdir(parents=True, exist_ok=True)
@@ -78,13 +78,24 @@ def _faiss_exists(folder: Path) -> bool:
     # If you want to be stricter, check for both.
     return (folder / "index.faiss").exists() and (folder / "index.pkl").exists()
 
+
+def load_solutions_context_from_mongo():
+    solutions_col = db["solutions"]
+
+    docs = list(solutions_col.find({}, {"_id": 0}))
+
+    # Convert to JSON string (same format as before)
+    return json.dumps(docs, indent=2)
+
 # SOLUTION VECTOR STORE
 def build_solution_vectorstore(subject):
 
     path = SOLUTIONS_VECTORSTORE_PATHS[subject]
 
-    with open("solution/solutions_output.json", "r") as f:
-        solutions = json.load(f)
+    solutions = list(db["solutions"].find(
+    {"subject": subject},   # ✅ FILTER
+    {"_id": 0}
+    ))
 
     docs = []
 
@@ -494,6 +505,9 @@ class SubmitCorrectionsPayload(BaseModel):
     subject: str
     corrections: List[ImageCorrection]
 
+class GenerateSolutionRequest(BaseModel):
+    question_text: str
+    subject: str = "Mathematics Advanced"
 
 @app.post("/submit_corrections/")
 async def submit_corrections(payload: SubmitCorrectionsPayload):
@@ -1182,6 +1196,177 @@ def main():
                 print("-", w)
 
     asyncio.run(run_test())
+
+# GENERATE SOLUTIONS 
+def extract_question_text_from_base64(image_base64: str):
+
+    prompt = "Extract the exact question text from this image."
+
+    response = client.responses.create(
+        model="gpt-5.2",
+        input=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "input_text", "text": prompt},
+                    {
+                        "type": "input_image",
+                        "image_url": f"data:image/png;base64,{image_base64}"
+                    }
+                ]
+            }
+        ]
+    )
+
+    return response.output_text.strip()
+
+def retrieve_similar_solutions(question_text, subject, k=5):
+
+    vs = solution_vectorstores.get(subject)
+
+    if vs is None:
+        raise HTTPException(status_code=400, detail=f"No solution vectorstore for {subject}")
+
+    retriever = vs.as_retriever(search_kwargs={"k": k})
+    docs = retriever.invoke(question_text)
+
+    return docs
+
+def generate_solution_from_text(question_text: str, subject: str):
+
+    # 1. Extract question text
+    question_text = question_text
+
+    # 2. Retrieve similar solutions
+    docs = retrieve_similar_solutions(question_text, subject)
+
+    # (optional debug)
+    for d in docs:
+        print("Retrieved:", d.metadata)
+
+    # 3. Load Mongo solutions JSON
+    # solutions_context = load_solutions_context_from_mongo()
+    solutions_context = "\n\n".join([
+        f"""
+    --- Solution Reference ---
+
+    {d.page_content}
+    """
+        for d in docs
+    ])
+
+    if subject == "Biology":
+
+        system_prompt = """You are an NSW HSC Biology exam marker.
+
+Your task is to generate answers in the SAME style as official HSC sample solutions.
+
+Rules:
+• Use concise biological terminology
+• Follow marking criteria structure
+• Match HSC command verbs (explain, analyse, evaluate)
+"""
+
+        user_prompt = f"""
+You are given HSC Biology sample answers and marking criteria.
+
+Reference solutions:
+{solutions_context}
+
+Using the SAME style:
+- Use precise biological terminology
+- Follow marking criteria wording
+- Be concise but complete
+- Use appropriate command verbs (explain, analyse, evaluate)
+
+Question:
+{question_text}
+
+Format your response EXACTLY like this:
+
+SOLUTION:
+<full worked solution>
+"""
+
+    else:  # Mathematics (default)
+
+        system_prompt = """You are an expert HSC mathematics exam marker.
+
+Follow official marking criteria exactly.
+
+Ensure:
+• Full working is shown
+• Logical steps are clear
+• Method marks would be awarded
+"""
+
+        user_prompt = f"""
+You are given marking criteria and sample answers from similar HSC questions.
+
+Reference solutions:
+{solutions_context}
+
+Using the SAME marking standards:
+- Follow the Criteria structure
+- Include all intermediate steps
+- Show full working clearly
+- Match the style of SampleAnswer
+
+Question:
+{question_text}
+
+Format your response EXACTLY like this:
+
+SOLUTION:
+<full worked solution>
+
+"""
+
+    response = client.responses.create(
+        model="gpt-5.2",
+        temperature=0.2,
+        input=[
+            {
+                "role": "system",
+                "content": [{"type": "input_text", "text": system_prompt}]
+            },
+            {
+                "role": "user",
+                "content": [
+                    {"type": "input_text", "text": user_prompt + "\n\nQuestion:\n" + question_text}
+                ]
+            }
+        ]
+    )
+    print("\n--- RETRIEVED SOLUTIONS ---\n")
+    for i, d in enumerate(docs):
+        print(f"\nSolution {i+1}")
+        print(d.page_content[:200])
+
+    return response.output_text
+
+@app.post("/generate-solution")
+async def generate_solution_endpoint(req: GenerateSolutionRequest):
+
+    try:
+        result_text = generate_solution_from_text(req.question_text, req.subject)
+
+        print("\n--- RAW MODEL OUTPUT ---\n")
+        print(result_text)
+
+        solution_match = re.search(r"SOLUTION:\s*(.*)", result_text, re.DOTALL)
+
+        generated_solution = (
+            solution_match.group(1).strip()
+            if solution_match
+            else result_text.strip()
+        )
+        return {
+            "generated_solution": generated_solution,
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":

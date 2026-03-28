@@ -13,3 +13,7 @@ class GenerateFromTopicsResponse(BaseModel):
     exemplars_used: int
     latex: str                        # MathJax/KaTeX-ready LaTeX
     exemplar_ids: List[int]           # QuestionId list (for traceability)
+
+class GenerateSolutionRequest(BaseModel):
+    question_text: str
+    subject: str = "Mathematics Advanced"

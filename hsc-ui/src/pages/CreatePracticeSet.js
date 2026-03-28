@@ -13,7 +13,30 @@ function CreatePracticeSet() {
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [visibleQuestions, setVisibleQuestions] = useState([]); // track display
+  const [solutions, setSolutions] = useState({});
+  const [loadingSolutions, setLoadingSolutions] = useState({});
   
+  const handleGenerateSolution = async (question, index) => {
+    setLoadingSolutions(prev => ({ ...prev, [index]: true }));
+
+    try {
+      const res = await axios.post(`${API_URL}/generate-solution`, {
+        question_text: question,
+        subject: subject
+      });
+
+      setSolutions(prev => ({
+        ...prev,
+        [index]: res.data.generated_solution
+      }));
+
+    } catch (err) {
+      console.error("Solution generation failed:", err);
+    } finally {
+      setLoadingSolutions(prev => ({ ...prev, [index]: false }));
+    }
+  };
+
   const handleQuestionsUpdate = useCallback((updated) => {
     setVisibleQuestions(updated);
   }, []); // ✅ stable function reference
