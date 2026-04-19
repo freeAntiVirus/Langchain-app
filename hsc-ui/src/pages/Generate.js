@@ -25,6 +25,26 @@ function Generate() {
   const [solutionError, setSolutionError] = useState("");
   const [generatedSolution, setGeneratedSolution] = useState("");
 
+  // feedback
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackError, setFeedbackError] = useState("");
+  const [feedbackResult, setFeedbackResult] = useState("");
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadedFile(file);
+  };
+
+  const toBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+  });
+
   const handleGenerate = async () => {
     setLoading(true);
     setErrorMsg("");
@@ -130,6 +150,44 @@ function Generate() {
       setSolutionLoading(false);
     }
   };
+
+  const handleGenerateFeedback = async () => {
+    setFeedbackLoading(true);
+    setFeedbackError("");
+    setFeedbackResult("");
+
+    if (!uploadedFile) {
+      setFeedbackError("Upload a solution first.");
+      setFeedbackLoading(false);
+      return;
+    }
+
+    if (!generatedLatex) {
+      setFeedbackError("Generate or provide the question first.");
+      setFeedbackLoading(false);
+      return;
+    }
+
+    try {
+      const base64 = await toBase64(uploadedFile);
+
+      const res = await axios.post(`${API_URL}/generate_feedback`, {
+        image_base64: base64,
+        question_text: generatedLatex,
+        subject: subject
+      });
+
+      setFeedbackResult(res.data.feedback);
+
+    } catch (err) {
+      console.error("Feedback generation failed:", err);
+      setFeedbackError(
+        err?.response?.data?.error || "Failed to generate feedback."
+      );
+    } finally {
+      setFeedbackLoading(false);
+    }
+  };
   // Re-render TikZ client-side whenever we get TikZ (fallback path)
   useEffect(() => {
     if (!diagramTikz) return;
@@ -206,6 +264,27 @@ function Generate() {
             )}
           </div>
 
+         <div className="flex items-center gap-3 mt-4 border border-red-500 p-2">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              className="text-sm"
+            />
+
+            <button
+              onClick={handleGenerateFeedback}
+              // disabled={!uploadedFile || feedbackLoading}
+              className="px-4 py-2 rounded-xl bg-purple-600 text-white disabled:opacity-50"
+            >
+              {feedbackLoading ? "Generating Feedback…" : "Generate Feedback"}
+            </button>
+
+            {feedbackError && (
+              <p className="text-sm text-red-600">{feedbackError}</p>
+            )}
+          </div>
+
           {/* Diagram Output */}
           <div className="rounded-2xl border p-4 min-h-[180px] flex items-center justify-center">
             {!diagramLoading && !diagramSVG && !diagramTikz && (
@@ -238,6 +317,80 @@ function Generate() {
               </p>
             )}
           </div>
+
+<div className="rounded-2xl border p-4">
+  {feedbackResult ? (
+    <>
+      <h3 className="font-semibold mb-3">Marking</h3>
+
+      <p className="text-lg font-bold mb-3">
+        {feedbackResult.marks_awarded} / {feedbackResult.total_marks}
+      </p>
+
+      <table className="w-full text-sm border border-gray-300">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="border px-2 py-1">Part</th>
+            <th className="border px-2 py-1">Criteria</th>
+            <th className="border px-2 py-1">Marks</th>
+            <th className="border px-2 py-1">Comment</th>
+          </tr>
+        </thead>
+              <tbody>
+          {feedbackResult.marking_table?.map((row, i) => (
+            <tr key={i}>
+              <td className="border px-2 py-1">({row.part})</td>
+
+              {/* ✅ Criteria with LaTeX */}
+              <td className="border px-2 py-1">
+                <LatexView latex={row.criterion} />
+              </td>
+
+              {/* Marks */}
+              <td className="border px-2 py-1">
+                {row.marks_awarded} / {row.max_marks}
+              </td>
+
+              {/* ✅ Comment with LaTeX */}
+              <td className="border px-2 py-1">
+                <LatexView latex={row.comment} />
+                
+                {/* OPTIONAL: show correct working */}
+                {row.correct_working && (
+                  <div className="mt-1 text-gray-600">
+                    <LatexView latex={row.correct_working} />
+                  </div>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div className="mt-3">
+        <strong>Summary:</strong>
+        <div className="text-sm">
+          <LatexView latex={feedbackResult.summary} />
+        </div>
+      </div>
+
+      <div className="mt-2">
+        <strong>Improvements:</strong>
+        <ul className="list-disc ml-5 text-sm">
+          {feedbackResult.improvements?.map((imp, i) => (
+            <li key={i}>
+              <LatexView latex={imp} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
+  ) : (
+    <p className="text-sm text-gray-500">
+      Upload your solution to receive feedback.
+    </p>
+  )}
+</div>
         </div>
       </div>
     </div>

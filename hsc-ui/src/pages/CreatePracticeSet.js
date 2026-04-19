@@ -15,7 +15,56 @@ function CreatePracticeSet() {
   const [visibleQuestions, setVisibleQuestions] = useState([]); // track display
   const [solutions, setSolutions] = useState({});
   const [loadingSolutions, setLoadingSolutions] = useState({});
-  
+
+  const [uploadedFiles, setUploadedFiles] = useState({});
+  const [feedbackResults, setFeedbackResults] = useState({});
+  const [feedbackLoading, setFeedbackLoading] = useState({});
+
+  const toBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+  });
+
+  const handleFileUpload = (e, index) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadedFiles(prev => ({
+      ...prev,
+      [index]: file
+    }));
+  };
+
+  const handleGenerateFeedback = async (question, index) => {
+    const file = uploadedFiles[index];
+    if (!file) return;
+
+    setFeedbackLoading(prev => ({ ...prev, [index]: true }));
+
+    try {
+      const base64 = await toBase64(file);
+
+      const res = await axios.post(`${API_URL}/generate_feedback`, {
+        image_base64: base64,
+        question_text: question,
+        subject: subject
+      });
+
+      setFeedbackResults(prev => ({
+        ...prev,
+        [index]: res.data.feedback
+      }));
+
+    } catch (err) {
+      console.error("Feedback generation failed:", err);
+    } finally {
+      setFeedbackLoading(prev => ({ ...prev, [index]: false }));
+    }
+  };
+
   const handleGenerateSolution = async (question, index) => {
     setLoadingSolutions(prev => ({ ...prev, [index]: true }));
 
@@ -99,11 +148,19 @@ function CreatePracticeSet() {
 
         {/* Right Panel */}
         <div className="w-full md:w-[50%] h-full flex flex-col gap-4">
-          <ScrollableTextBox
-            questions={questions}
-            onQuestionsUpdate={handleQuestionsUpdate}
-            subject={subject}
-          />
+         <ScrollableTextBox
+  questions={questions}
+  onQuestionsUpdate={handleQuestionsUpdate}
+  subject={subject}
+  onGenerateSolution={handleGenerateSolution}
+  solutions={solutions}
+  loadingSolutions={loadingSolutions}
+
+  onFileUpload={handleFileUpload}
+  onGenerateFeedback={handleGenerateFeedback}
+  feedbackResults={feedbackResults}
+  feedbackLoading={feedbackLoading}
+/>
           <DownloadPdfButton
             questions={visibleQuestions}
           />

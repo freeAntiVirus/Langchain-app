@@ -93,7 +93,7 @@ def build_solution_vectorstore(subject):
     path = SOLUTIONS_VECTORSTORE_PATHS[subject]
 
     solutions = list(db["solutions"].find(
-    {"subject": subject},   # ✅ FILTER
+    {"Subject": subject},   # ✅ FILTER
     {"_id": 0}
     ))
 
@@ -1290,36 +1290,60 @@ SOLUTION:
 
     else:  # Mathematics (default)
 
-        system_prompt = """You are an expert HSC mathematics exam marker.
+        latex_rules = """
+LATEX RULES:
+• All mathematics must be written in LaTeX using $$ ... $$
+• Each step must be on a new line
+• Use clean, exam-style working (no long explanations)
+• Use standard HSC notation only
+• Use \\frac{}{} for fractions and \\sqrt{} for roots
+• Do not output plain text maths
+• Do not mix LaTeX and text in the same expression
+• Final answers must be clearly written in LaTeX
+"""
 
-Follow official marking criteria exactly.
+        system_prompt = """You are an expert NSW HSC Mathematics marker.
 
-Ensure:
-• Full working is shown
-• Logical steps are clear
-• Method marks would be awarded
+Your task is to produce solutions EXACTLY in HSC exam style.
+
+STRICT RULES:
+• Be concise — no unnecessary explanation
+• Use only standard HSC mathematical language
+• Do NOT use advanced or university-level terminology
+• Only include steps that would earn marks
+• Use clear step-by-step working
+• No paragraphs — only mathematical steps
+• Avoid words like: "thus", "hence we observe", "it can be seen that"
+• Prefer equations over sentences
+• Final answer must be clearly stated
+
+Write like a Band 6 student in an exam.
 """
 
         user_prompt = f"""
-You are given marking criteria and sample answers from similar HSC questions.
+Use the marking style and structure of the reference solutions.
 
 Reference solutions:
 {solutions_context}
 
-Using the SAME marking standards:
-- Follow the Criteria structure
-- Include all intermediate steps
-- Show full working clearly
-- Match the style of SampleAnswer
+Now solve the following question in HSC exam style.
+
+{latex_rules}
 
 Question:
 {question_text}
 
-Format your response EXACTLY like this:
+IMPORTANT:
+• Keep it concise
+• Show only necessary steps
+• Use clean mathematical working
+• No long explanations
+• No unnecessary wording
+
+Format:
 
 SOLUTION:
-<full worked solution>
-
+<step-by-step working only>
 """
 
     response = client.responses.create(
@@ -1367,6 +1391,389 @@ async def generate_solution_endpoint(req: GenerateSolutionRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+class GenerateFeedbackRequest(BaseModel):
+    image_base64: str
+    question_text: str
+    subject: str = "Mathematics Advanced"
+
+from fastapi import HTTPException
+from pydantic import BaseModel
+import json
+
+class GenerateFeedbackRequest(BaseModel):
+    image_base64: str
+    question_text: str
+    subject: str = "Mathematics Advanced"
+
+
+@app.post("/generate_feedback")
+async def generate_feedback(req: GenerateFeedbackRequest):
+
+    try:
+        # ==============================
+        # 1. OCR: Extract student solution
+        # ==============================
+        extraction_prompt = """
+Extract ONLY the student's FULL working/solution.
+
+Return STRICT JSON:
+{
+  "student_solution": "..."
+}
+"""
+
+        extraction = client.responses.create(
+            model="gpt-5.2",
+            input=[{
+                "role": "user",
+                "content": [
+                    {"type": "input_text", "text": extraction_prompt},
+                    {
+                        "type": "input_image",
+                        "image_url": f"data:image/png;base64,{req.image_base64}"
+                    }
+                ]
+            }]
+        )
+
+        extracted_text = extraction.output_text.strip()
+
+        try:
+            parsed = json.loads(extracted_text)
+            student_solution = parsed["student_solution"]
+        except:
+            raise HTTPException(status_code=500, detail="Failed to parse OCR output")
+
+        print("\n📝 STUDENT SOLUTION:\n", student_solution)
+
+
+        # ==============================
+        # 2. Retrieve similar solutions (IMPROVED QUERY)
+        # ==============================
+
+        if "biology" in req.subject.lower():
+            query = f"""
+        HSC Biology question involving:
+        - key biological concepts
+        - processes
+        - terminology
+
+        Question:
+        {req.question_text}
+        """
+        else:
+            query = f"""
+        HSC Mathematics question involving:
+        - derivatives
+        - gradients
+        - tangents
+
+        Question:
+        {req.question_text}
+        """
+
+        docs = retrieve_similar_solutions(query, req.subject, k=15)
+
+        print("\n🔎 RETRIEVED SOLUTIONS FOR FEEDBACK:\n", docs)
+
+
+        # ==============================
+        # 3. Filter relevant docs
+        # ==============================
+        filtered_docs = []
+
+        for d in docs:
+            text = d.page_content.lower()
+
+            if any(k in text for k in ["derivative", "tangent", "gradient"]):
+                filtered_docs.append(d)
+
+        if not filtered_docs:
+            filtered_docs = docs[:5]  # fallback
+
+        docs = filtered_docs
+
+
+        # ==============================
+        # 4. Build criteria context
+        # ==============================
+        criteria_context = json.dumps([
+            {
+                "criteria": d.metadata.get("criteria"),
+                "sample_answer": d.page_content
+            }
+            for d in docs
+        ], indent=2)
+
+
+        # ==============================
+        # 5. 🔥 RUBRIC GENERATION (KEY FIX)
+        # ==============================
+
+
+        math_rubric_prompt = f"""
+You are an HSC mathematics marker.
+
+Create a marking rubric for the question below.
+
+QUESTION:
+{req.question_text}
+
+REFERENCES:
+{criteria_context}
+
+CRITICAL RULES:
+- Within EACH part, criteria must be progressive (banded)
+- Use descending marks (e.g. 3, 2, 1)
+- Each level represents a higher quality response
+- DO NOT split into small additive steps
+- DO NOT use cumulative marking within a part
+
+STYLE:
+- Keep criteria short (HSC style)
+- Use phrases like:
+  • "Correct solution"
+  • "Correct method"
+  • "Attempts solution"
+- Avoid long descriptions
+
+Return STRICT JSON:
+
+{{
+  "rubric": [
+    {{
+      "part": "a",
+      "criteria": [
+        {{"criterion": "Correct derivative", "marks": 2}},
+        {{"criterion": "Partial attempt at differentiation", "marks": 1}}
+      ]
+    }}
+  ],
+  "total_marks": int
+}}
+"""
+
+
+        biology_rubric_prompt = f"""
+        You are an expert NSW HSC Biology marker.
+
+        Create a marking rubric for the question.
+
+        QUESTION:
+        {req.question_text}
+
+        REFERENCES:
+        {criteria_context}
+
+        CRITICAL RULES:
+        - Use HSC Biology marking style
+        - Mark based on key biological concepts, not steps
+        - Criteria must be progressive (banded marking)
+        - Each level reflects depth of understanding
+        - Use descending marks (e.g. 3, 2, 1)
+        - DO NOT split into tiny steps
+
+        STYLE:
+        - Use short, content-based criteria
+        - Focus on:
+        • accuracy of biological concepts
+        • use of correct terminology
+        • completeness of explanation
+
+        Return STRICT JSON:
+
+        {{
+        "rubric": [
+            {{
+            "part": "a",
+            "criteria": [
+                {{"criterion": "Detailed and accurate explanation using correct terminology", "marks": 3}},
+                {{"criterion": "Basic explanation with some correct terminology", "marks": 2}},
+                {{"criterion": "Limited or partial understanding", "marks": 1}}
+            ]
+            }}
+        ],
+        "total_marks": int
+        }}
+    """
+
+
+        if req.subject == "Biology":
+            rubric_prompt = biology_rubric_prompt
+        else:
+            rubric_prompt = math_rubric_prompt
+
+
+        rubric_response = client.responses.create(
+            model="gpt-5.2",
+            temperature=0.1,
+            input=[{
+                "role": "user",
+                "content": [{"type": "input_text", "text": rubric_prompt}]
+            }]
+        )
+
+        rubric_text = rubric_response.output_text.strip()
+
+        print("\n📊 GENERATED RUBRIC:\n", rubric_text)
+
+        try:
+            rubric_json = json.loads(rubric_text)
+        except:
+            raise HTTPException(status_code=500, detail="Invalid rubric JSON")
+
+
+        # ==============================
+        # 6. 🔥 MARK USING RUBRIC
+        # ==============================
+
+        math_marking_prompt = f"""
+        You are an HSC mathematics marker.
+
+        QUESTION:
+        {req.question_text}
+
+        STUDENT SOLUTION:
+        {student_solution}
+
+        MARKING RUBRIC:
+        {json.dumps(rubric_json, indent=2)}
+
+        Mark the student's solution.
+
+        CRITICAL RULES:
+        - Use banded marking within each part (award ONE level only)
+        - Use latex formatting for mathematical expressions in feedback
+        - Output STRICT valid JSON
+        - Escape all backslashes (e.g. \\( not \()
+        - Do not include raw LaTeX unless properly escaped
+        - Do NOT combine criteria within a part
+        - Output must follow a table-style structure
+        - Use short, formal HSC-style comments
+        - No emojis, no unnecessary wording
+
+        For each part:
+        - Select the appropriate criterion level
+        - Award marks accordingly
+        - Provide a short comment explaining correctness or error
+
+        Return STRICT JSON:
+
+        {{
+        "marks_awarded": int,
+        "total_marks": int,
+        "marking_table": [
+            {{
+            "part": "a",
+            "criterion": "Short criterion label",
+            "marks_awarded": int,
+            "max_marks": int,
+            "comment": "Short explanation"
+            }}
+        ],
+        "summary": "Brief overall judgement",
+        "improvements": [
+            "Short improvement",
+            "Short improvement"
+        ]
+        }}
+        """
+
+        biology_marking_prompt = f"""
+        You are an expert NSW HSC Biology marker.
+
+        QUESTION:
+        {req.question_text}
+
+        STUDENT RESPONSE:
+        {student_solution}
+
+        MARKING RUBRIC:
+        {json.dumps(rubric_json, indent=2)}
+
+        Mark the student's response.
+
+        CRITICAL RULES:
+        - Use banded marking (ONE level per part)
+        - Focus on biological understanding, not steps
+        - Do NOT combine criteria within a part
+        - Output must follow a table-style structure
+        - Evaluate:
+        • correctness of concepts
+        • use of biological terminology
+        • clarity of explanation
+        - Penalise:
+        • vague language
+        • missing key ideas
+        • incorrect terminology
+
+        STYLE:
+        - Use short HSC-style comments
+        - No long explanations
+        - No maths-style working
+        - No LaTeX needed (plain text only)
+        - Be concise and direct
+
+        Return STRICT JSON:
+
+     {{
+    "marks_awarded": int,
+    "total_marks": int,
+    "marking_table": [
+        {{
+            "part": "a",
+            "criterion": "Short label",
+            "marks_awarded": int,
+            "max_marks": int,
+            "comment": "Short biology-specific comment"
+        }}
+    ],
+    "summary": "Brief overall judgement",
+    "improvements": [
+        "Use more precise biological terminology",
+        "Include missing key concept",
+        "Improve explanation clarity"
+    ]
+}}
+        """
+
+        if req.subject == "Biology":
+            rubric_prompt = biology_rubric_prompt
+            marking_prompt = biology_marking_prompt
+        else:
+            rubric_prompt = math_rubric_prompt
+            marking_prompt = math_marking_prompt
+
+        response = client.responses.create(
+            model="gpt-5.2",
+            temperature=0.1,
+            input=[
+                {
+                    "role": "user",
+                    "content": [{"type": "input_text", "text": marking_prompt}]
+                }
+            ]
+        )
+
+        result_text = response.output_text.strip()
+
+        print("\n🧾 FINAL MARKING OUTPUT:\n", result_text)
+
+        try:
+            result_json = json.loads(result_text)
+        except:
+            raise HTTPException(status_code=500, detail="Invalid marking JSON")
+
+        return {
+            "feedback": result_json
+        }
+
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}
 
 
 if __name__ == "__main__":
