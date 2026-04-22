@@ -1300,12 +1300,12 @@ SOLUTION:
 
         latex_rules = """
 LATEX RULES:
-• All mathematics must be written in LaTeX
-• Each step must be on a new line
-• Use \\frac{}{} for fractions and \\sqrt{} for roots
-• Do not output plain text maths
-• Do not mix LaTeX and text in the same expression
-• Final answers must be clearly written in LaTeX
+- Use only MathJax/KaTeX-safe LaTeX:
+  - Inline: \( ... \)
+  - Display: \[ ... \] or \begin{{align*}}...\end{{align*}}
+- Do NOT use \begin{{enumerate}}, \item, \tabular, \center, TikZ, or \boxed.
+- Do NOT wrap in triple backticks or prepend "latex".
+Return only the raw LaTeX content.
 """
 
         system_prompt = """You are an expert NSW HSC Mathematics marker.
@@ -1405,11 +1405,12 @@ SOLUTION:
 
         latex_rules = """
 LATEX RULES:
-• All maths must be LaTeX
-• Each step on a new line
-• Use \\frac{}{} and \\sqrt{}
-• No plain text maths
-• Final answer clearly shown
+- Use only MathJax/KaTeX-safe LaTeX:
+  - Inline: \( ... \)
+  - Display: \[ ... \] or \begin{{align*}}...\end{{align*}}
+- Do NOT use \begin{{enumerate}}, \item, \tabular, \center, TikZ, or \boxed.
+- Do NOT wrap in triple backticks or prepend "latex".
+Return only the raw LaTeX content.
 """
 
         system_prompt = """You are an NSW HSC Mathematics marker.
