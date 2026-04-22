@@ -288,58 +288,60 @@ function Generate() {
   {feedbackLoading ? (
     <Loader text="Marking solution..." />
   ) : feedbackResult ? (
-    <div className="text-sm space-y-4">
+  <div className="text-sm space-y-4">
 
-      {/* SUMMARY */}
-      <div>
-        <strong>Summary:</strong>
-        <p>{feedbackResult.summary}</p>
-      </div>
+    {/* SUMMARY */}
+<div>
+  <strong>Summary:</strong>
+  <LatexView latex={feedbackResult.summary} />
+</div>
 
-      {/* MARKING TABLE */}
-      <div>
-        <strong>Marking:</strong>
-        <table className="w-full border mt-2 text-sm">
-          <thead>
-            <tr className="border-b bg-gray-100">
-              <th className="text-left p-2">Part</th>
-              <th className="text-left p-2">Criterion</th>
-              <th className="text-left p-2">Marks</th>
-              <th className="text-left p-2">Comment</th>
+    {/* TABLE */}
+    <div>
+      <strong>Marking:</strong>
+   <table className="w-full text-sm border border-gray-300">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="border px-2 py-1">Part</th>
+            <th className="border px-2 py-1">Criteria</th>
+            <th className="border px-2 py-1">Marks</th>
+            <th className="border px-2 py-1">Comment</th>
+          </tr>
+        </thead>
+              <tbody>
+          {feedbackResult.marking_table?.map((row, i) => (
+            <tr key={i}>
+              <td className="border px-2 py-1">({row.part})</td>
+
+              {/* ✅ Criteria with LaTeX */}
+              <td className="border px-2 py-1">
+                <LatexView latex={row.criterion} />
+              </td>
+
+              {/* Marks */}
+              <td className="border px-2 py-1">
+                {row.marks_awarded} / {row.max_marks}
+              </td>
+
+              {/* ✅ Comment with LaTeX */}
+              <td className="border px-2 py-1">
+                <LatexView latex={row.comment} />
+                
+                {/* OPTIONAL: show correct working */}
+                {row.correct_working && (
+                  <div className="mt-1 text-gray-600">
+                    <LatexView latex={row.correct_working} />
+                  </div>
+                )}
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {feedbackResult.marking_table?.map((row, i) => (
-              <tr key={i} className="border-b">
-                <td className="p-2">{row.part}</td>
-                <td className="p-2">{row.criterion}</td>
-                <td className="p-2">
-                  {row.marks_awarded}/{row.max_marks}
-                </td>
-                <td className="p-2">{row.comment}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* IMPROVEMENTS */}
-      <div>
-        <strong>Improvements:</strong>
-        <ul className="list-disc ml-5">
-          {feedbackResult.improvements?.map((imp, i) => (
-            <li key={i}>{imp}</li>
           ))}
-        </ul>
-      </div>
-
-      {/* TOTAL */}
-      <div>
-        <strong>Total:</strong>{" "}
-        {feedbackResult.marks_awarded} / {feedbackResult.total_marks}
-      </div>
+        </tbody>
+      </table>
 
     </div>
+
+  </div>
   ) : (
     <p className="text-gray-500">Feedback appears here</p>
   )}
