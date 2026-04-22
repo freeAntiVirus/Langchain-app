@@ -285,67 +285,67 @@ function Generate() {
               )}
 
              <div className="border p-4 rounded-2xl">
-  {feedbackLoading ? (
-    <Loader text="Marking solution..." />
-  ) : feedbackResult ? (
-  <div className="text-sm space-y-4">
+              {feedbackLoading ? (
+                <Loader text="Marking solution..." />
+              ) : feedbackResult ? (
+              <div className="text-sm space-y-4">
 
-    {/* SUMMARY */}
-<div>
-  <strong>Summary:</strong>
-  <LatexView latex={feedbackResult.summary} />
-</div>
+                {/* SUMMARY */}
+            <div>
+              <strong>Summary:</strong>
+              <LatexView latex={feedbackResult.summary} />
+            </div>
 
-    {/* TABLE */}
-    <div>
-      <strong>Marking:</strong>
-   <table className="w-full text-sm border border-gray-300">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border px-2 py-1">Part</th>
-            <th className="border px-2 py-1">Criteria</th>
-            <th className="border px-2 py-1">Marks</th>
-            <th className="border px-2 py-1">Comment</th>
-          </tr>
-        </thead>
-              <tbody>
-          {feedbackResult.marking_table?.map((row, i) => (
-            <tr key={i}>
-              <td className="border px-2 py-1">({row.part})</td>
+                {/* TABLE */}
+              <div>
+                  <strong>Marking:</strong>
+              <table className="w-full text-sm border border-gray-300">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="border px-2 py-1">Part</th>
+                        <th className="border px-2 py-1">Criteria</th>
+                        <th className="border px-2 py-1">Marks</th>
+                        <th className="border px-2 py-1">Comment</th>
+                      </tr>
+                    </thead>
+                          <tbody>
+                      {feedbackResult.marking_table?.map((row, i) => (
+                        <tr key={i}>
+                          <td className="border px-2 py-1">({row.part})</td>
 
-              {/* ✅ Criteria with LaTeX */}
-              <td className="border px-2 py-1">
-                <LatexView latex={row.criterion} />
-              </td>
+                          {/* ✅ Criteria with LaTeX */}
+                          <td className="border px-2 py-1">
+                            <LatexView latex={row.criterion} />
+                          </td>
 
-              {/* Marks */}
-              <td className="border px-2 py-1">
-                {row.marks_awarded} / {row.max_marks}
-              </td>
+                          {/* Marks */}
+                          <td className="border px-2 py-1">
+                            {row.marks_awarded} / {row.max_marks}
+                          </td>
 
-              {/* ✅ Comment with LaTeX */}
-              <td className="border px-2 py-1">
-                <LatexView latex={row.comment} />
-                
-                {/* OPTIONAL: show correct working */}
-                {row.correct_working && (
-                  <div className="mt-1 text-gray-600">
-                    <LatexView latex={row.correct_working} />
-                  </div>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                          {/* ✅ Comment with LaTeX */}
+                          <td className="border px-2 py-1">
+                            <LatexView latex={row.comment} />
+                            
+                            {/* OPTIONAL: show correct working */}
+                            {row.correct_working && (
+                              <div className="mt-1 text-gray-600">
+                                <LatexView latex={row.correct_working} />
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
 
-    </div>
+                </div>
 
-  </div>
-  ) : (
-    <p className="text-gray-500">Feedback appears here</p>
-  )}
-</div>
+              </div>
+              ) : (
+                <p className="text-gray-500">Feedback appears here</p>
+              )}
+            </div>
             </>
           )}
 

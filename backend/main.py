@@ -1772,8 +1772,6 @@ Return STRICT JSON:
         - Use banded marking within each part (award ONE level only)
         - Use latex formatting for mathematical expressions in feedback
         - Output STRICT valid JSON
-        - Escape all backslashes (e.g. \\( not \()
-        - Do not include raw LaTeX unless properly escaped
         - Do NOT combine criteria within a part
         - Output must follow a table-style structure
         - Use short, formal HSC-style comments
@@ -1783,6 +1781,14 @@ Return STRICT JSON:
         - Select the appropriate criterion level
         - Award marks accordingly
         - Provide a short comment explaining correctness or error
+
+        LATEX RULES:
+        - Use only MathJax/KaTeX-safe LaTeX:
+        - Inline: \( ... \)
+        - Display: \[ ... \] or \begin{{align*}}...\end{{align*}}
+        - Do NOT use \begin{{enumerate}}, \item, \tabular, \center, TikZ, or \boxed.
+        - Do NOT wrap in triple backticks or prepend "latex".
+        Return only the raw LaTeX content.
 
         Return STRICT JSON:
 
