@@ -1272,6 +1272,7 @@ Rules:
 • Use concise biological terminology
 • Follow marking criteria structure
 • Match HSC command verbs (explain, analyse, evaluate)
+- Do not use technical language or phrasing that differs from authentic HSC Biology exam style or is outside the scope of typical HSC questions.
 """
 
         user_prompt = f"""
