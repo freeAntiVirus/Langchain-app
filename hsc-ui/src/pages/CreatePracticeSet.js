@@ -65,26 +65,36 @@ function CreatePracticeSet() {
     }
   };
 
-  const handleGenerateSolution = async (question, index) => {
-    setLoadingSolutions(prev => ({ ...prev, [index]: true }));
+const handleGenerateSolution = async (question, index) => {
+  setLoadingSolutions(prev => ({ ...prev, [index]: true }));
 
-    try {
-      const res = await axios.post(`${API_URL}/generate-solution`, {
-        question_text: question,
-        subject: subject
-      });
+  try {
+    const base64 = question?.base64;
 
-      setSolutions(prev => ({
-        ...prev,
-        [index]: res.data.generated_solution
-      }));
+    console.log("QUESTION:", question);
+    console.log("BASE64:", base64);
 
-    } catch (err) {
-      console.error("Solution generation failed:", err);
-    } finally {
-      setLoadingSolutions(prev => ({ ...prev, [index]: false }));
+    if (!base64) {
+      alert("No base64 found on question");
+      return;
     }
-  };
+
+    const res = await axios.post(`${API_URL}/generate-solution`, {
+      image_base64: base64,
+      subject: subject
+    });
+
+    setSolutions(prev => ({
+      ...prev,
+      [index]: res.data.generated_solution
+    }));
+
+  } catch (err) {
+    console.error("Solution generation failed:", err);
+  } finally {
+    setLoadingSolutions(prev => ({ ...prev, [index]: false }));
+  }
+};
 
   const handleQuestionsUpdate = useCallback((updated) => {
     setVisibleQuestions(updated);
@@ -148,6 +158,9 @@ function CreatePracticeSet() {
 
         {/* Right Panel */}
         <div className="w-full md:w-[50%] h-full flex flex-col gap-4">
+           <DownloadPdfButton
+            questions={visibleQuestions}
+          />
          <ScrollableTextBox
   questions={questions}
   onQuestionsUpdate={handleQuestionsUpdate}
@@ -161,9 +174,7 @@ function CreatePracticeSet() {
   feedbackResults={feedbackResults}
   feedbackLoading={feedbackLoading}
 />
-          <DownloadPdfButton
-            questions={visibleQuestions}
-          />
+        
         </div>
       </div>
     </div>

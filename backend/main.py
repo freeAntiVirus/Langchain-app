@@ -944,6 +944,10 @@ Constraints:
 - DO NOT include preamble, \documentclass, \usepackage, or \begin{{document}}.
 - DO NOT include any text besides the tikzpicture environment.
 - If a diagram is unnecessary, still produce a minimal contextual diagram (e.g., axes with a placeholder curve) that remains useful.
+- ALWAYS restrict the domain of any plotted function (e.g. domain=-2:3).
+- Ensure all graphs are bounded within a visible window.
+- Do NOT draw curves that extend infinitely beyond the axes.
+- Keep the entire diagram within a reasonable box (based on context).
 
 Question (LaTeX):
 ---
@@ -990,6 +994,7 @@ def tikz_to_svg(tikz_code: str) -> Tuple[Optional[str], Optional[str]]:
     has_inkscape  = bool(which("inkscape"))
 
     if not has_tectonic:
+        print("SVG conversion skipped: tectonic not found.")
         return None, "SVG: tectonic not found on server."
 
     tmpdir = tempfile.mkdtemp(prefix="tikzsvg_")
@@ -1022,8 +1027,11 @@ def tikz_to_svg(tikz_code: str) -> Tuple[Optional[str], Optional[str]]:
                     log_tail = lf.read()[-2000:]
             return None, "SVG: PDF not produced by tectonic. " + (f"Log tail: {log_tail}" if log_tail else "")
 
+        print("IM IN HERE")
+
         # --- 2) dvisvgm --pdf (preferred) ---
         if has_dvisvgm:
+            print("Using dvisvgm for PDF->SVG conversion.")
             if not has_gs:
                 warnings.append("SVG: Ghostscript (gs) not found; dvisvgm --pdf may fail.")
             dsvg = subprocess.run(
@@ -1065,6 +1073,9 @@ def tikz_to_svg(tikz_code: str) -> Tuple[Optional[str], Optional[str]]:
         # Nothing worked → signal fallback to TikZ
         warn = "; ".join(warnings) if warnings else "SVG: conversion failed; no converter available."
         return None, warn
+
+        print("SVG GENERATED:", svg_text is not None)
+        print("WARNINGS:", warnings)
 
     except subprocess.TimeoutExpired:
         return None, "SVG: conversion timed out."
@@ -1232,118 +1243,63 @@ def retrieve_similar_solutions(question_text, subject, k=5):
 
     return docs
 
-def generate_solution_from_text(question_text: str, subject: str):
-
-    # 1. Extract question text
-    question_text = question_text
-
-    # 2. Retrieve similar solutions
-    docs = retrieve_similar_solutions(question_text, subject)
-
-    # (optional debug)
-    for d in docs:
-        print("Retrieved:", d.metadata)
-
-    # 3. Load Mongo solutions JSON
-    # solutions_context = load_solutions_context_from_mongo()
-    solutions_context = "\n\n".join([
-        f"""
-    --- Solution Reference ---
-
-    {d.page_content}
-    """
-        for d in docs
-    ])
+def generate_solution_from_image(image_base64: str, subject: str):
 
     if subject == "Biology":
 
         system_prompt = """You are an NSW HSC Biology exam marker.
 
-Your task is to generate answers in the SAME style as official HSC sample solutions.
+Generate answers in official HSC sample solution style.
 
 Rules:
 • Use concise biological terminology
 • Follow marking criteria structure
-• Match HSC command verbs (explain, analyse, evaluate)
+• Match command verbs (explain, analyse, evaluate)
 """
 
-        user_prompt = f"""
-You are given HSC Biology sample answers and marking criteria.
+        user_prompt = """
+You are given an exam question as an image.
 
-Reference solutions:
-{solutions_context}
-
-Using the SAME style:
-- Use precise biological terminology
-- Follow marking criteria wording
-- Be concise but complete
-- Use appropriate command verbs (explain, analyse, evaluate)
-
-Question:
-{question_text}
-
-Format your response EXACTLY like this:
-
-SOLUTION:
-<full worked solution>
-"""
-
-    else:  # Mathematics (default)
-
-        latex_rules = """
-LATEX RULES:
-• All mathematics must be written in LaTeX using $$ ... $$
-• Each step must be on a new line
-• Use clean, exam-style working (no long explanations)
-• Use standard HSC notation only
-• Use \\frac{}{} for fractions and \\sqrt{} for roots
-• Do not output plain text maths
-• Do not mix LaTeX and text in the same expression
-• Final answers must be clearly written in LaTeX
-"""
-
-        system_prompt = """You are an expert NSW HSC Mathematics marker.
-
-Your task is to produce solutions EXACTLY in HSC exam style.
-
-STRICT RULES:
-• Be concise — no unnecessary explanation
-• Use only standard HSC mathematical language
-• Do NOT use advanced or university-level terminology
-• Only include steps that would earn marks
-• Use clear step-by-step working
-• No paragraphs — only mathematical steps
-• Avoid words like: "thus", "hence we observe", "it can be seen that"
-• Prefer equations over sentences
-• Final answer must be clearly stated
-
-Write like a Band 6 student in an exam.
-"""
-
-        user_prompt = f"""
-Use the marking style and structure of the reference solutions.
-
-Reference solutions:
-{solutions_context}
-
-Now solve the following question in HSC exam style.
-
-{latex_rules}
-
-Question:
-{question_text}
-
-IMPORTANT:
-• Keep it concise
-• Show only necessary steps
-• Use clean mathematical working
-• No long explanations
-• No unnecessary wording
+Read the question carefully and generate a full HSC-style solution.
 
 Format:
 
 SOLUTION:
-<step-by-step working only>
+<full answer>
+"""
+
+    else:  # Mathematics
+
+        latex_rules = """
+LATEX RULES:
+• All maths must be LaTeX
+• Each step on a new line
+• Use \\frac{}{} and \\sqrt{}
+• No plain text maths
+• Final answer clearly shown
+"""
+
+        system_prompt = """You are an NSW HSC Mathematics marker.
+
+STRICT RULES:
+• Answer all parts
+• No long explanations
+• Only exam-style working
+• No unnecessary words
+• Show only steps that earn marks
+"""
+
+        user_prompt = f"""
+You are given a maths exam question as an image.
+
+Solve it in HSC exam style.
+
+{latex_rules}
+
+Format:
+
+SOLUTION:
+<step-by-step working>
 """
 
     response = client.responses.create(
@@ -1357,23 +1313,29 @@ SOLUTION:
             {
                 "role": "user",
                 "content": [
-                    {"type": "input_text", "text": user_prompt + "\n\nQuestion:\n" + question_text}
+                    {"type": "input_text", "text": user_prompt},
+                    {
+                                        
+                    "type": "input_image",
+                    "image_url": f"data:image/png;base64,{image_base64}"
+                    }
                 ]
             }
         ]
     )
-    print("\n--- RETRIEVED SOLUTIONS ---\n")
-    for i, d in enumerate(docs):
-        print(f"\nSolution {i+1}")
-        print(d.page_content[:200])
 
     return response.output_text
+
+class GenerateSolutionRequest(BaseModel):
+    image_base64: str
+    subject: str
 
 @app.post("/generate-solution")
 async def generate_solution_endpoint(req: GenerateSolutionRequest):
 
+    print("Generating solution for subject:", req.subject)
     try:
-        result_text = generate_solution_from_text(req.question_text, req.subject)
+        result_text = generate_solution_from_image(req.image_base64, req.subject)
 
         print("\n--- RAW MODEL OUTPUT ---\n")
         print(result_text)

@@ -6,12 +6,71 @@ import LatexView from "../components/LatexView";
 import { API_URL } from "../index.js";
 
 /* ------------------ REVAMP POPUP ------------------ */
-const RevampPopup = ({ questionLatex, onClose }) => {
-  const captureRef = useRef();
+const RevampPopup = ({ questionLatex, subject, onClose }) => {
+  const [solution, setSolution] = useState("");
+  const [loadingSolution, setLoadingSolution] = useState(false);
+
+  const [file, setFile] = useState(null);
+  const [feedback, setFeedback] = useState(null);
+  const [loadingFeedback, setLoadingFeedback] = useState(false);
+
+  const toBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result.split(",")[1]);
+      reader.onerror = reject;
+    });
+
+  /* -------- SOLUTION -------- */
+  const handleGenerateSolution = async () => {
+    setLoadingSolution(true);
+    try {
+      const res = await axios.post(`${API_URL}/generate-solution`, {
+        question_text: questionLatex,
+        subject,
+      });
+      setSolution(res.data.generated_solution);
+    } catch {
+      alert("Failed to generate solution");
+    } finally {
+      setLoadingSolution(false);
+    }
+  };
+
+  /* -------- FEEDBACK -------- */
+  const handleGenerateFeedback = async () => {
+    if (!file) return;
+
+    setLoadingFeedback(true);
+
+    try {
+      const base64 = await toBase64(file);
+
+      const res = await axios.post(`${API_URL}/generate_feedback`, {
+        image_base64: base64,
+        question_text: questionLatex,
+        subject,
+      });
+
+      const parsed =
+        typeof res.data.feedback === "string"
+          ? JSON.parse(res.data.feedback)
+          : res.data.feedback;
+
+      setFeedback(parsed);
+    } catch {
+      alert("Failed to generate feedback");
+    } finally {
+      setLoadingFeedback(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-2xl relative">
+      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-3xl relative overflow-y-auto max-h-[90vh]">
+
+        {/* CLOSE */}
         <button
           onClick={onClose}
           className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-xl"
@@ -19,26 +78,87 @@ const RevampPopup = ({ questionLatex, onClose }) => {
           ✕
         </button>
 
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">
-          🔁 Revamped Question
+        <h2 className="text-xl font-semibold mb-4">
+          Revamped Question
         </h2>
 
+        {/* QUESTION */}
         <MathJaxContext>
-          <div ref={captureRef}>
-            <div className="overflow-auto px-1 max-h-[70vh]">
-              <LatexView latex={questionLatex} />
-            </div>
-          </div>
+          <LatexView latex={questionLatex} />
         </MathJaxContext>
 
-        <div className="mt-6 flex justify-end">
+        {/* SOLUTION */}
+        <div className="mt-6">
           <button
-            onClick={onClose}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+            onClick={handleGenerateSolution}
+            className="bg-green-600 text-white px-3 py-1 rounded"
           >
-            Close
+            {loadingSolution ? "Generating..." : "Generate Solution"}
           </button>
+
+          {solution && (
+            <div className="mt-3 p-3 border rounded bg-gray-50">
+              <strong>Solution</strong>
+              <LatexView latex={solution} />
+            </div>
+          )}
         </div>
+
+        {/* FEEDBACK */}
+        <div className="mt-6">
+          <p className="font-semibold">Upload a solution to get feedback:</p>
+          <input
+            type="file"
+            onChange={(e) => setFile(e.target.files[0])}
+          />
+
+          <button
+            onClick={handleGenerateFeedback}
+            className="bg-purple-600 text-white px-3 py-1 rounded ml-2"
+          >
+            {loadingFeedback ? "Generating..." : "Generate Feedback"}
+          </button>
+
+          {feedback && (
+            <div className="mt-3 border p-3 rounded">
+
+              <p className="font-bold">
+                {feedback.marks_awarded} / {feedback.total_marks}
+              </p>
+
+              <table className="w-full text-sm border mt-2">
+                <thead>
+                  <tr>
+                    <th>Part</th>
+                    <th>Criteria</th>
+                    <th>Marks</th>
+                    <th>Comment</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {feedback.marking_table?.map((row, i) => (
+                    <tr key={i}>
+                      <td>{row.part}</td>
+                      <td>{row.criterion}</td>
+                      <td>{row.marks_awarded}/{row.max_marks}</td>
+                      <td>{row.comment}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <p className="mt-2"><strong>Summary:</strong> {feedback.summary}</p>
+
+              <ul className="list-disc ml-5">
+                {feedback.improvements?.map((imp, i) => (
+                  <li key={i}>{imp}</li>
+                ))}
+              </ul>
+
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );
@@ -108,7 +228,7 @@ const ScrollableTextBox = ({
 
   return (
     <MathJaxContext>
-      <div className="h-[500px] overflow-y-auto p-4 border rounded-lg bg-white shadow w-full text-gray-700">
+      <div className="h-screen overflow-y-auto p-4 border rounded-lg bg-white shadow w-full text-gray-700">
 
         {localQuestions.length === 0 ? (
           <p className="text-sm text-gray-500">No questions to display.</p>
@@ -138,7 +258,7 @@ const ScrollableTextBox = ({
 
                 {/* SOLUTION */}
                 <button
-                  onClick={() => onGenerateSolution(q.text || q, index)}
+                  onClick={() => onGenerateSolution(q, index)}
                   className="bg-green-500 px-2 py-1 rounded text-sm text-white"
                 >
                   {loadingSolutions?.[index] ? "Loading..." : "Solution"}
@@ -164,6 +284,7 @@ const ScrollableTextBox = ({
               )}
 
               {/* FILE UPLOAD */}
+              <p className="font-semibold mt-4">Upload your solution for feedback:</p>
               <div className="mt-3">
                 <input
                   type="file"
@@ -256,6 +377,7 @@ const ScrollableTextBox = ({
       {showPopup && (
         <RevampPopup
           questionLatex={revampQuestion}
+          subject={subject}
           onClose={() => setShowPopup(false)}
         />
       )}
