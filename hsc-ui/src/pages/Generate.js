@@ -89,7 +89,7 @@ function Generate() {
     setSolutionError("");
 
     try {
-      const res = await axios.post(`${API_URL}/generate-solution`, {
+      const res = await axios.post(`${API_URL}/generate-solution-text`, {
         question_text: generatedLatex,
         subject,
       });
@@ -166,9 +166,6 @@ function Generate() {
       if (window.renderTikz) window.renderTikz();
     }, 0);
   }, [diagramTikz]);
-
-  const isAnyLoading =
-    loading || solutionLoading || feedbackLoading || diagramLoading;
 
   /* ---------------- UI ---------------- */
 
@@ -251,6 +248,11 @@ function Generate() {
               >
                 {solutionLoading ? "Generating..." : "Generate Solution"}
               </button>
+
+
+              {solutionError && (
+                <p className="text-red-500 text-sm">{solutionError}</p>
+              )}
 
               <div className="border p-4 rounded-2xl">
                 {solutionLoading ? (
@@ -355,6 +357,10 @@ function Generate() {
               >
                 {diagramLoading ? "Generating..." : "Generate Diagram"}
               </button>
+
+              {diagramError && (
+                <p className="text-red-500 text-sm">{diagramError}</p>
+              )}
 
               <div className="border p-4 rounded-2xl min-h-[180px] flex items-center justify-center">
                 {diagramLoading ? (

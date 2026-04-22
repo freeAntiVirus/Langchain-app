@@ -1243,6 +1243,138 @@ def retrieve_similar_solutions(question_text, subject, k=5):
 
     return docs
 
+def generate_solution_from_text(question_text: str, subject: str):
+
+    # 1. Retrieve similar solutions (RAG)
+    docs = retrieve_similar_solutions(question_text, subject)
+
+    # Debug (optional)
+    for d in docs:
+        print("Retrieved:", d.metadata)
+
+    # 2. Build context
+    solutions_context = "\n\n".join([
+        f"""
+--- Solution Reference ---
+{d.page_content}
+"""
+        for d in docs
+    ])
+
+    # 3. Prompt construction
+    if subject == "Biology":
+
+        system_prompt = """You are an NSW HSC Biology exam marker.
+
+Your task is to generate answers in the SAME style as official HSC sample solutions.
+
+Rules:
+• Use concise biological terminology
+• Follow marking criteria structure
+• Match HSC command verbs (explain, analyse, evaluate)
+"""
+
+        user_prompt = f"""
+You are given HSC Biology sample answers and marking criteria.
+
+Reference solutions:
+{solutions_context}
+
+Using the SAME style:
+- Use precise biological terminology
+- Follow marking criteria wording
+- Be concise but complete
+- Use appropriate command verbs (explain, analyse, evaluate)
+
+Question:
+{question_text}
+
+Format your response EXACTLY like this:
+
+SOLUTION:
+<full worked solution>
+"""
+
+    else:  # Mathematics
+
+        latex_rules = """
+LATEX RULES:
+• All mathematics must be written in LaTeX
+• Each step must be on a new line
+• Use \\frac{}{} for fractions and \\sqrt{} for roots
+• Do not output plain text maths
+• Do not mix LaTeX and text in the same expression
+• Final answers must be clearly written in LaTeX
+"""
+
+        system_prompt = """You are an expert NSW HSC Mathematics marker.
+
+Your task is to produce solutions EXACTLY in HSC exam style.
+
+STRICT RULES:
+• Answer all parts of the question (a), (b), (c), etc.
+• Be concise — no unnecessary explanation
+• Use only standard HSC mathematical language
+• Do NOT use advanced or university-level terminology
+• Only include steps that would earn marks
+• Use clear step-by-step working
+• No paragraphs — only mathematical steps
+• Prefer equations over sentences
+• Final answer must be clearly stated
+
+Write like a Band 6 student in an exam.
+"""
+
+        user_prompt = f"""
+Use the marking style and structure of the reference solutions.
+
+Reference solutions:
+{solutions_context}
+
+Now solve the following question in HSC exam style.
+
+{latex_rules}
+
+Question:
+{question_text}
+
+IMPORTANT:
+• Keep it concise
+• Show only necessary steps
+• No long explanations
+• No unnecessary wording
+
+Format:
+
+SOLUTION:
+<step-by-step working only>
+"""
+
+    # 4. Call model
+    response = client.responses.create(
+        model="gpt-5.2",
+        temperature=0.2,
+        input=[
+            {
+                "role": "system",
+                "content": [{"type": "input_text", "text": system_prompt}]
+            },
+            {
+                "role": "user",
+                "content": [{"type": "input_text", "text": user_prompt}]
+            }
+        ]
+    )
+
+    # Debug output
+    print("\n--- RETRIEVED SOLUTIONS ---\n")
+    for i, d in enumerate(docs):
+        print(f"\nSolution {i+1}")
+        print(d.page_content[:200])
+
+    return response.output_text
+
+
 def generate_solution_from_image(image_base64: str, subject: str):
 
     if subject == "Biology":
@@ -1326,12 +1458,42 @@ SOLUTION:
 
     return response.output_text
 
+
 class GenerateSolutionRequest(BaseModel):
+    question_text: str
+    subject: str
+
+@app.post("/generate-solution-text")
+async def generate_solution_endpoint(req: GenerateSolutionRequest):
+
+    print("Generating solution for subject:", req.subject)
+    try:
+        result_text = generate_solution_from_text(req.question_text, req.subject)
+
+        print("\n--- RAW MODEL OUTPUT ---\n")
+        print(result_text)
+
+        solution_match = re.search(r"SOLUTION:\s*(.*)", result_text, re.DOTALL)
+
+        generated_solution = (
+            solution_match.group(1).strip()
+            if solution_match
+            else result_text.strip()
+        )
+        return {
+            "generated_solution": generated_solution,
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class GenerateImageSolutionRequest(BaseModel):
     image_base64: str
     subject: str
 
-@app.post("/generate-solution")
-async def generate_solution_endpoint(req: GenerateSolutionRequest):
+@app.post("/generate-solution-image")
+async def generate_solution_endpoint(req: GenerateImageSolutionRequest):
 
     print("Generating solution for subject:", req.subject)
     try:

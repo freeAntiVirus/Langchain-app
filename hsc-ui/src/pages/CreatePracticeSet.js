@@ -79,7 +79,7 @@ const handleGenerateSolution = async (question, index) => {
       return;
     }
 
-    const res = await axios.post(`${API_URL}/generate-solution`, {
+    const res = await axios.post(`${API_URL}/generate-solution-image`, {
       image_base64: base64,
       subject: subject
     });
