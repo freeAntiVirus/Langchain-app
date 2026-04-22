@@ -167,6 +167,10 @@ function Generate() {
     }, 0);
   }, [diagramTikz]);
 
+
+  const cleanLatex = (str) => 
+  str?.replace(/\\\\/g, "\\");
+
   /* ---------------- UI ---------------- */
 
   return (
@@ -315,7 +319,7 @@ function Generate() {
 
                           {/* ✅ Criteria with LaTeX */}
                           <td className="border px-2 py-1">
-                            <LatexView latex={row.criterion} />
+                           <LatexView latex={cleanLatex(row.criterion)} />
                           </td>
 
                           {/* Marks */}
@@ -325,12 +329,12 @@ function Generate() {
 
                           {/* ✅ Comment with LaTeX */}
                           <td className="border px-2 py-1">
-                            <LatexView latex={row.comment} />
+                            <LatexView latex={cleanLatex(row.comment)} />
                             
                             {/* OPTIONAL: show correct working */}
                             {row.correct_working && (
                               <div className="mt-1 text-gray-600">
-                                <LatexView latex={row.correct_working} />
+                                <LatexView latex={cleanLatex(row.correct_working)} />
                               </div>
                             )}
                           </td>

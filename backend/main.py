@@ -1665,6 +1665,9 @@ STYLE:
 - Avoid long descriptions
 
 Return STRICT JSON:
+IMPORTANT:
+- Escape all backslashes in LaTeX (use double backslashes)
+- Example: \\(x^2\\), not \(x^2\)
 
 {{
   "rubric": [
@@ -1791,6 +1794,9 @@ Return STRICT JSON:
         Return only the raw LaTeX content.
 
         Return STRICT JSON:
+        IMPORTANT:
+        - Escape all backslashes in LaTeX (use double backslashes)
+        - Example: \\(x^2\\), not \(x^2\)
 
         {{
         "marks_awarded": int,
