@@ -4,6 +4,7 @@ import axios from "axios";
 import LatexView from "../components/LatexView";
 import SubjectTopicPicker from "../components/SubjectTopicPicker";
 import { API_URL } from "../index.js";
+import { MathJax } from "better-react-mathjax";
 
 /* ---------------- LOADER ---------------- */
 const Loader = ({ text = "Loading..." }) => (
