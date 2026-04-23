@@ -1487,6 +1487,8 @@ async def generate_solution_endpoint(req: GenerateSolutionRequest):
         }
 
     except Exception as e:
+        print("🔥 ERROR:", str(e))
+        traceback.print_exc()   # THIS IS CRITICAL
         raise HTTPException(status_code=500, detail=str(e))
 
 
