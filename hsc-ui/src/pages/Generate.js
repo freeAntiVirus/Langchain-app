@@ -330,7 +330,8 @@ function Generate() {
 
                           {/* ✅ Criteria with LaTeX */}
                           <td className="border px-2 py-1">
-                           <LatexView latex={cleanLatex(row.criterion)} />
+                             <MathJax dynamic><LatexView latex={cleanLatex(row.criterion)} /></MathJax>
+                           
                           </td>
 
                           {/* Marks */}
