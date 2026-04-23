@@ -4,7 +4,7 @@ import axios from "axios";
 import LatexView from "../components/LatexView";
 import SubjectTopicPicker from "../components/SubjectTopicPicker";
 import { API_URL } from "../index.js";
-import { MathJax } from "better-react-mathjax";
+import { MathJax, MathJaxContext } from "better-react-mathjax";
 
 /* ---------------- LOADER ---------------- */
 const Loader = ({ text = "Loading..." }) => (
@@ -315,6 +315,8 @@ function Generate() {
                 {/* TABLE */}
               <div>
                   <strong>Marking:</strong>
+                <MathJaxContext>
+  <MathJax dynamic>
               <table className="w-full text-sm border border-gray-300">
                     <thead>
                       <tr className="bg-gray-100">
@@ -331,7 +333,7 @@ function Generate() {
 
                           {/* ✅ Criteria with LaTeX */}
                           <td className="border px-2 py-1">
-                             <MathJax dynamic><LatexView latex={cleanLatex(row.criterion)} /></MathJax>
+                             <LatexView latex={cleanLatex(row.criterion)} />
                            
                           </td>
 
@@ -355,6 +357,8 @@ function Generate() {
                       ))}
                     </tbody>
                   </table>
+                  </MathJax>
+                  </MathJaxContext>
 
                 </div>
 
