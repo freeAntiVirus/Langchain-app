@@ -168,8 +168,19 @@ function Generate() {
   }, [diagramTikz]);
 
 
-  const cleanLatex = (str) => 
-  str?.replace(/\\\\/g, "\\");
+  const cleanLatex = (str) => {
+  if (!str) return "";
+
+  return str
+    // fix double escaped backslashes from JSON
+    .replace(/\\\\/g, "\\")
+    // remove accidental escaped parentheses (extra layer)
+    .replace(/\\\(/g, "\\(")
+    .replace(/\\\)/g, "\\)")
+    // optional: trim weird spacing
+    .replace(/\s+/g, " ")
+    .trim();
+};
 
   /* ---------------- UI ---------------- */
 
