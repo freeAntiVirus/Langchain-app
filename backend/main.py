@@ -1703,6 +1703,7 @@ STYLE (STRICT):
 - Do NOT include final answers or full expressions in the criterion
 - Do NOT use brackets () or colons : in the criterion wording
 - Be precise about the mathematical idea or step achieved
+- Student level language 
 
 LATEX RULES:
 - Use LaTeX only when necessary
