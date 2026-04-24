@@ -1756,6 +1756,26 @@ Return STRICT JSON:
         - Use descending marks (e.g. 3, 2, 1)
         - DO NOT split into tiny steps
 
+        MULTIPLE CHOICE RULE (OVERRIDES ALL OTHER RULES):
+        - A question is considered multiple choice if it presents a list of answer options (e.g. A, B, C, D)
+        - If the question is multiple choice (single correct option), it must be worth EXACTLY 1 mark
+        - Do NOT apply banded marking to multiple choice questions
+        - Do NOT create multiple criteria levels for multiple choice
+        - The rubric for a multiple choice question should contain only ONE criterion:
+        • Correct answer selected → 1 mark
+        - No partial marks are to be awarded for multiple choice questions
+
+        - This rule takes precedence over all other mark allocation rules
+
+        MARK ALLOCATION RULES (VERY IMPORTANT):
+
+        - Use the REFERENCES to guide how marks are distributed across parts
+        - Identify the total marks and per-part marks from similar questions in the REFERENCES
+        - The total marks for this question should be consistent with similar questions
+
+        - Do NOT inflate marks beyond what is typical in the REFERENCES for specic question verbs (e.g. explain, analyse, evaluate)
+        - Prefer slightly lower mark allocations rather than higher ones
+
         STYLE:
         - Use short, content-based criteria
         - Focus on:
