@@ -1662,6 +1662,25 @@ CRITICAL RULES:
 - Do NOT split into small step-by-step marks
 - Do NOT use cumulative marking within a part
 
+MARK ALLOCATION RULES (VERY IMPORTANT):
+
+- Use the REFERENCES to guide how marks are distributed across parts
+- Identify the total marks and per-part marks from similar questions in the REFERENCES
+- The total marks for this question should be consistent with similar questions
+
+- Do NOT inflate marks beyond what is typical in the REFERENCES
+- Prefer slightly lower mark allocations rather than higher ones
+
+- Each part should typically be worth between 1–3 marks unless strongly justified by the REFERENCES
+- Do NOT assign excessive marks to simple tasks (e.g. basic differentiation or substitution)
+
+- If a part is procedural or straightforward, it should receive fewer marks
+- If a part requires multiple steps or reasoning, it may receive more marks
+
+- The sum of marks across all parts must equal the total_marks
+
+- When uncertain, choose the more conservative (lower) mark allocation
+
 STYLE (STRICT):
 - Each criterion must be ONE short sentence
 - The highest mark MAY use the phrase "Correct solution"
