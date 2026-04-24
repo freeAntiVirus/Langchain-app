@@ -307,10 +307,13 @@ function Generate() {
               <div className="text-sm space-y-4">
 
                 {/* SUMMARY */}
-            <div>
-              <strong>Summary:</strong>
-              <LatexView latex={feedbackResult.summary} />
-            </div>
+
+             <h3 className="font-semibold mb-3">Marking</h3>
+
+            <p className="text-lg font-bold mb-3">
+              {feedbackResult.marks_awarded} / {feedbackResult.total_marks}
+            </p>
+
 
                 {/* TABLE */}
               <div>
