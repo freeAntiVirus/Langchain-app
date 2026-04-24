@@ -1662,6 +1662,17 @@ CRITICAL RULES:
 - Do NOT split into small step-by-step marks
 - Do NOT use cumulative marking within a part
 
+MULTIPLE CHOICE RULE (OVERRIDES ALL OTHER RULES):
+- A question is considered multiple choice if it presents a list of answer options (e.g. A, B, C, D)
+- If the question is multiple choice (single correct option), it must be worth EXACTLY 1 mark
+- Do NOT apply banded marking to multiple choice questions
+- Do NOT create multiple criteria levels for multiple choice
+- The rubric for a multiple choice question should contain only ONE criterion:
+  • Correct answer selected → 1 mark
+- No partial marks are to be awarded for multiple choice questions
+
+- This rule takes precedence over all other mark allocation rules
+
 MARK ALLOCATION RULES (VERY IMPORTANT):
 
 - Use the REFERENCES to guide how marks are distributed across parts
