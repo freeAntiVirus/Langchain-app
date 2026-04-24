@@ -1680,6 +1680,16 @@ LATEX RULES:
 - Escape all backslashes (e.g. \\\\(x^2\\\\))
 - Use f^{{\\prime}}(x) instead of f'(x)
 
+JSON SAFETY RULE (CRITICAL):
+
+- EVERY backslash MUST be escaped as \\\\
+- This includes:
+  \\\\( and \\\\)
+  \\\\frac, \\\\ln, etc
+
+- Do NOT mix escaped and unescaped LaTeX
+- Do NOT output partial escaping
+
 Return STRICT JSON:
 
 {{
@@ -1797,18 +1807,33 @@ Return STRICT JSON:
         - Award marks accordingly
         - Provide a short comment explaining correctness or error
 
-        LATEX RULES:
-        - Use only MathJax/KaTeX-safe LaTeX:
-        - Inline: \( ... \)
-        - Display: \[ ... \] or \begin{{align*}}...\end{{align*}}
-        - Do NOT use \begin{{enumerate}}, \item, \tabular, \center, TikZ, or \boxed.
-        - Do NOT wrap in triple backticks or prepend "latex".
-        Return only the raw LaTeX content.
+        LATEX RULES (STRICT):
 
-        Return STRICT JSON:
-        IMPORTANT:
-        - Escape all backslashes in LaTeX (use double backslashes)
-        - Example: \\(x^2\\), not \(x^2\)
+- Use standard LaTeX for all mathematical expressions (no restriction on commands)
+- Wrap ALL mathematical expressions in \( ... \)
+
+FORMAT RULE:
+- Write LaTeX naturally (e.g. \frac{{x}}{{y}}, \ln x, e^{{2x}})
+- Do NOT manually escape backslashes
+
+JSON SAFETY RULE (CRITICAL):
+- The output MUST be valid JSON parsable by Python json.loads()
+- ALL backslashes in the final JSON string MUST be escaped as \\\\
+- This means every LaTeX backslash must appear as \\\\ in the JSON output
+
+EXAMPLES:
+- Correct: "\\\\frac{{x}}{{y}}"
+- Correct: "\\\\ln x"
+- Correct: "\\\\(x^2\\\\)"
+- Incorrect: "\frac{{x}}{{y}}"
+- Incorrect: "\(x^2\)"
+
+ADDITIONAL RULES:
+- Do NOT produce invalid escape sequences such as \f, \l, \s
+- Do NOT include raw LaTeX outside of JSON strings
+- Do NOT include markdown, code blocks, or extra formatting
+
+        - If backslashes are not escaped, the output is INVALID
 
         {{
         "marks_awarded": int,
