@@ -357,8 +357,29 @@ function Generate() {
                       ))}
                     </tbody>
                   </table>
+
+
+                   <div className="mt-3">
+                      <strong>Summary:</strong>
+                      <div className="text-sm">
+                        <LatexView latex={feedbackResult.summary} />
+                      </div>
+                    </div>
+
+                    <div className="mt-2">
+                      <strong>Improvements:</strong>
+                      <ul className="list-disc ml-5 text-sm">
+                        {feedbackResult.improvements?.map((imp, i) => (
+                          <li key={i}>
+                            <LatexView latex={imp} />
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </MathJax>
                   </MathJaxContext>
+
+
 
                 </div>
 
