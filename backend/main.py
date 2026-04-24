@@ -1639,7 +1639,7 @@ Return STRICT JSON:
         # 5. 🔥 RUBRIC GENERATION (KEY FIX)
         # ==============================
 
-math_rubric_prompt = f"""
+        math_rubric_prompt = f"""
 You are an HSC mathematics marker.
 
 Create a marking rubric for the question below.
