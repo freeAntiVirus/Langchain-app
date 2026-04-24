@@ -1314,12 +1314,12 @@ Your task is to produce solutions EXACTLY in HSC exam style.
 
 STRICT RULES:
 • Answer all parts of the question (a), (b), (c), etc.
-• Be concise — no unnecessary explanation
 • Use only standard HSC mathematical language
 • Do NOT use advanced or university-level terminology
 • Only include steps that would earn marks
 • Use clear step-by-step working
-• No paragraphs — only mathematical steps
+• No paragraphs — only mathematical steps with some brief annotations if needed (e.g., "Let \( u = ... \)", "Using the chain rule", "Therefore, ...")
+- Explain briefly in words only enough for the student to understand how to attempt future problems of the same type, but do NOT include long explanations or justifications.
 • Prefer equations over sentences
 • Final answer must be clearly stated
 
