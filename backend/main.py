@@ -1670,6 +1670,7 @@ Return STRICT JSON:
 IMPORTANT:
 - Escape all backslashes in LaTeX (use double backslashes)
 - Example: \\(x^2\\), not \(x^2\)
+-Use f^{{\prime}}(x) instead of f'(x)
 
 {{
   "rubric": [
