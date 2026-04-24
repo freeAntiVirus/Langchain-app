@@ -1639,8 +1639,7 @@ Return STRICT JSON:
         # 5. 🔥 RUBRIC GENERATION (KEY FIX)
         # ==============================
 
-
-        math_rubric_prompt = f"""
+math_rubric_prompt = f"""
 You are an HSC mathematics marker.
 
 Create a marking rubric for the question below.
@@ -1652,33 +1651,43 @@ REFERENCES:
 {criteria_context}
 
 CRITICAL RULES:
+- Use the REFERENCES as guidance for wording, structure, and level of detail
+- Do NOT copy directly from the references
+- Adapt them to match the specific question
+
 - Within EACH part, criteria must be progressive (banded)
 - Use descending marks (e.g. 3, 2, 1)
 - Each level represents a higher quality response
-- DO NOT split into small additive steps
-- DO NOT use cumulative marking within a part
+- Award ONE level per part (not additive)
+- Do NOT split into small step-by-step marks
+- Do NOT use cumulative marking within a part
 
-STYLE:
-- Keep criteria short (HSC style)
-- Use phrases like:
-  • "Correct solution"
-  • "Correct method"
-  • "Attempts solution"
-- Avoid long descriptions
+STYLE (STRICT):
+- Each criterion must be ONE short sentence
+- The highest mark MAY use the phrase "Correct solution"
+- The highest mark should describe a complete and correct outcome
+- Lower marks must NOT use generic phrases such as:
+  "Correct method", "Attempts solution", "Correct solution"
+- Lower marks must describe specific partial progress or errors
+- Describe what the student has demonstrated, not what they attempted
+- Do NOT include final answers or full expressions in the criterion
+- Do NOT use brackets () or colons : in the criterion wording
+- Be precise about the mathematical idea or step achieved
+
+LATEX RULES:
+- Use LaTeX only when necessary
+- Wrap all mathematical expressions in \\( ... \\)
+- Escape all backslashes (e.g. \\\\(x^2\\\\))
+- Use f^{{\\prime}}(x) instead of f'(x)
 
 Return STRICT JSON:
-IMPORTANT:
-- Escape all backslashes in LaTeX (use double backslashes)
-- Example: \\(x^2\\), not \(x^2\)
--Use  \(f^{{\prime}}(x)=0\) instead of f'(x)
 
 {{
   "rubric": [
     {{
       "part": "a",
       "criteria": [
-        {{"criterion": "Correct derivative", "marks": 2}},
-        {{"criterion": "Partial attempt at differentiation", "marks": 1}}
+        {{"criterion": "string", "marks": int}}
       ]
     }}
   ],
