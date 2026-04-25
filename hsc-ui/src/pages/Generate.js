@@ -274,7 +274,7 @@ function Generate() {
                 {solutionLoading ? (
                   <Loader text="Generating solution..." />
                 ) : generatedSolution ? (
-                  <LatexView latex={cleanLatex(generatedSolution)} />
+                  <LatexView latex={generatedSolution} />
                 ) : (
                   <p className="text-gray-500">Solution appears here</p>
                 )}
