@@ -63,7 +63,7 @@ function Generate() {
     try {
       const res = await axios.post(`${API_URL}/generate-question-by-topics`, {
         topics: selectedTopics,
-        exemplar_count: 5,
+        exemplar_count: 50,
         temperature: 0.5,
         subject,
       });

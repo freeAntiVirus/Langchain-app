@@ -765,7 +765,7 @@ The topics are provided only to keep the mathematics relevant.
 Do NOT use different technical terminology, or invent your own structure or style — stay as close as possible to the exemplars.
 Randomise the difficulty of the questions you generate (not always very easy, make some quite hard).
 
-Exemplar questions (pick a random one and use it as the main reference for style, structure, and phrasing):
+Exemplar questions (Use as reference for style, structure, and phrasing):
 {exemplars_block}
 
 Target topics (for relevance only, secondary to style):
@@ -1658,7 +1658,7 @@ RULES:
 - Each part must use banded marking (e.g. 3, 2, 1)
 - Award ONE level per part (not additive)
 - Total marks must be consistent with similar questions
-- Prefer conservative mark allocation
+- Prefer conservative mark allocation 
 - Simple parts should have fewer marks
 
 MULTIPLE CHOICE:
