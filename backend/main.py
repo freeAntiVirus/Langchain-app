@@ -1306,21 +1306,28 @@ LATEX RULES:
 - Do NOT use \begin{{enumerate}}, \item, \tabular, \center, TikZ, or \boxed.
 - Do NOT wrap in triple backticks or prepend "latex".
 Return only the raw LaTeX content.
+
 """
 
-        system_prompt = """You are an expert NSW HSC Mathematics marker.
+        system_prompt = """You are an experienced NSW HSC Mathematics teacher.
 
-Your task is to produce solutions EXACTLY in HSC exam style.
+Your goal is to produce clear, structured solutions that help students learn.
 
-STRICT RULES:
-• Answer all parts of the question (a), (b), (c), etc.
-• Use only standard HSC mathematical language
-• Do NOT use advanced or university-level terminology
-• Use clear step-by-step working
-• No paragraphs — only mathematical steps with some brief annotations if needed (e.g., "Let \( u = ... \)", "Using the chain rule", "Therefore, ...")
-- Explain briefly in words only enough for the student to understand how to attempt future problems of the same type, but do NOT include long explanations or justifications.
+STYLE:
+- Follow HSC exam structure
+- Show full working clearly
+- Include brief explanations to justify each step
+- Use concise, student-friendly language
+- Avoid unnecessary wording, but do not remove important reasoning
+- Ensure each step logically follows from the previous one
 
-Write like a Band 6 student in an exam.
+LEVEL CONSTRAINT (VERY IMPORTANT):
+
+- All solutions must be strictly within the NSW HSC Mathematics Advanced syllabus
+- Do NOT use university-level concepts, terminology, or reasoning
+- Do NOT include abstract or theoretical explanations
+- Use only methods and language that a Year 12 student is expected to know
+- If a method is not part of the HSC syllabus, do not use it
 """
 
         user_prompt = f"""
@@ -1336,16 +1343,15 @@ Now solve the following question in HSC exam style.
 Question:
 {question_text}
 
-IMPORTANT:
-• Keep it concise
-• Show only necessary steps
-• No long explanations
-• No unnecessary wording
-
-Format:
+FORMAT:
 
 SOLUTION:
-<step-by-step working only>
+
+- Present working step-by-step
+- Include brief explanations where needed to explain reasoning
+- Use clear mathematical structure (align steps logically)
+- Final answers should be clearly stated
+- Do not center or box answers; use standard aligned equations and clear step-by-step working.
 """
 
     # 4. Call model
@@ -1647,76 +1653,35 @@ QUESTION:
 REFERENCES:
 {criteria_context}
 
-CRITICAL RULES:
-- Use the REFERENCES as guidance for wording, structure, and level of detail
-- Do NOT copy directly from the references
-- Adapt them to match the specific question
+RULES:
 
-- Within EACH part, criteria must be progressive (banded)
-- Use descending marks (e.g. 3, 2, 1)
-- Each level represents a higher quality response
+- Use the REFERENCES to guide mark allocation and structure
+- Do NOT copy from the references
+
+- Each part must use banded marking (e.g. 3, 2, 1)
 - Award ONE level per part (not additive)
-- Do NOT split into small step-by-step marks
-- Do NOT use cumulative marking within a part
+- Total marks must be consistent with similar questions
+- Prefer conservative mark allocation
+- Simple parts should have fewer marks
 
-MULTIPLE CHOICE RULE (OVERRIDES ALL OTHER RULES):
-- A question is considered multiple choice if it presents a list of answer options (e.g. A, B, C, D)
-- If the question is multiple choice (single correct option), it must be worth EXACTLY 1 mark
-- Do NOT apply banded marking to multiple choice questions
-- Do NOT create multiple criteria levels for multiple choice
-- The rubric for a multiple choice question should contain only ONE criterion:
-  • Correct answer selected → 1 mark
-- No partial marks are to be awarded for multiple choice questions
+MULTIPLE CHOICE:
+- If options A, B, C, D are present, it is 1 mark only
+- No banded marking, no partial marks
 
-- This rule takes precedence over all other mark allocation rules
+STYLE:
 
-MARK ALLOCATION RULES (VERY IMPORTANT):
+- Each criterion is ONE short sentence
+- Highest mark may use "Correct solution"
+- Lower marks must describe specific partial progress
+- Do NOT use generic phrases like "Correct method" or "Attempts solution"
+- Do NOT include final answers
+- No brackets or colons
 
-- Use the REFERENCES to guide how marks are distributed across parts
-- Identify the total marks and per-part marks from similar questions in the REFERENCES
-- The total marks for this question should be consistent with similar questions
+LATEX:
 
-- Do NOT inflate marks beyond what is typical in the REFERENCES
-- Prefer slightly lower mark allocations rather than higher ones
-
-- Each part should typically be worth between 1–3 marks unless strongly justified by the REFERENCES
-- Do NOT assign excessive marks to simple tasks (e.g. basic differentiation or substitution)
-
-- If a part is procedural or straightforward, it should receive fewer marks
-- If a part requires multiple steps or reasoning, it may receive more marks
-
-- The sum of marks across all parts must equal the total_marks
-
-- When uncertain, choose the more conservative (lower) mark allocation
-
-STYLE (STRICT):
-- Each criterion must be ONE short sentence
-- The highest mark MAY use the phrase "Correct solution"
-- The highest mark should describe a complete and correct outcome
-- Lower marks must NOT use generic phrases such as:
-  "Correct method", "Attempts solution", "Correct solution"
-- Lower marks must describe specific partial progress or errors
-- Describe what the student has demonstrated, not what they attempted
-- Do NOT include final answers or full expressions in the criterion
-- Do NOT use brackets () or colons : in the criterion wording
-- Be precise about the mathematical idea or step achieved
-- Student level language 
-
-LATEX RULES:
-- Use LaTeX only when necessary
-- Wrap all mathematical expressions in \\( ... \\)
-- Escape all backslashes (e.g. \\\\(x^2\\\\))
-- Use f^{{\\prime}}(x) instead of f'(x)
-
-JSON SAFETY RULE (CRITICAL):
-
-- EVERY backslash MUST be escaped as \\\\
-- This includes:
-  \\\\( and \\\\)
-  \\\\frac, \\\\ln, etc
-
-- Do NOT mix escaped and unescaped LaTeX
-- Do NOT output partial escaping
+- Use only if needed
+- Wrap in \\( ... \\)
+- Use f^{{\\prime}}(x), not f'(x)
 
 Return STRICT JSON:
 
@@ -1817,10 +1782,10 @@ Return STRICT JSON:
 
         print("\n📊 GENERATED RUBRIC:\n", rubric_text)
 
-        try:
-            rubric_json = json.loads(rubric_text)
-        except:
-            raise HTTPException(status_code=500, detail="Invalid rubric JSON")
+        # try:
+        #     rubric_json = json.loads(rubric_text)
+        # except:
+        #     raise HTTPException(status_code=500, detail="Invalid rubric JSON")
 
 
         # ==============================
@@ -1837,7 +1802,7 @@ Return STRICT JSON:
         {student_solution}
 
         MARKING RUBRIC:
-        {json.dumps(rubric_json, indent=2)}
+        {rubric_text}
 
         Mark the student's solution.
 
@@ -1913,7 +1878,7 @@ ADDITIONAL RULES:
         {student_solution}
 
         MARKING RUBRIC:
-        {json.dumps(rubric_json, indent=2)}
+        {rubric_text}
 
         Mark the student's response.
 
