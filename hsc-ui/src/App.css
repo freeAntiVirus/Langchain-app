@@ -41,3 +41,7 @@
 .MathJax {
   text-align: left !important;
 }
+
+.katex-display {
+  text-align: left !important;
+}
