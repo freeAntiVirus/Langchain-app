@@ -948,6 +948,7 @@ Constraints:
 - Ensure all graphs are bounded within a visible window.
 - Do NOT draw curves that extend infinitely beyond the axes.
 - Keep the entire diagram within a reasonable box (based on context).
+- Give appropriate space for tree diagrams and use small labels or legends if needed.
 
 Question (LaTeX):
 ---
@@ -1111,13 +1112,9 @@ async def generate_diagram_for_question(req: GenerateDiagramRequest):
     end_tag = r"\end{tikzpicture}"
     start_idx = raw.find(start_tag)
     end_idx = raw.rfind(end_tag)
-    if start_idx == -1 or end_idx == -1:
-        # fallback: wrap all content (worst-case)
-        tikz_code = f"{start_tag}\n% Fallback: model did not wrap output properly.\n{raw}\n{end_tag}"
-        warnings = ["Model response did not include a clean tikzpicture environment; applied fallback wrapper."]
-    else:
-        tikz_code = raw[start_idx:end_idx + len(end_tag)]
-        warnings = None
+
+    tikz_code = raw[start_idx:end_idx + len(end_tag)]
+    warnings = None
 
     svg_text = None
     if req.render_target == "svg":
